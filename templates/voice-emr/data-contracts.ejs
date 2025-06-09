@@ -15,9 +15,6 @@ const buildGenerics = (contract) => {
 }
 
 const typeMapping = {
-    'uploadType': '"STREAM" | "FILE"',
-    'emrStatus': '"NOT_STARTED" | "IN_PROGRESS" | "FAILED" | "COMPLETED"',
-    'recordingStatus': '"NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "WAIT_FOR_RECONNECT" | "PAUSED"',
     'gptEmr': 'Record<string, string[]>',
     'transcription': '{ start: number; end: number; attendees?: string; text: string }[]',
     'rating': '"like" | "dislike"'
