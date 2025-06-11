@@ -9,6 +9,8 @@ const queryParamsDto = routes.filter(v=>v.specificArgs.query).map(v=>`${pascalCa
 const allImports = ["axiosInstance", "unAuthorizedAxiosInstance", ...queryParamsDto, ...dataContracts]
 %>
 
+import type { AxiosRequestConfig } from 'axios';
+
 import { <%~ allImports.join(", ") %> } from '@/shared/api';
 
 const <%= apiName %>Api = {

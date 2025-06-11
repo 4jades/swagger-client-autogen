@@ -16,6 +16,8 @@ const pathParams = _.values(route.request.parameters);
 const hasPathParams = pathParams.length > 0;
 const payload = route.request.payload;
 const query = route.request.query;
+const method = route.request.method.toLowerCase();
+const isDataMethod = method === 'post' || method === 'put' || method === 'patch';
 
 const queryTypeName = query ? `${pascalCase(route.routeName.usage.replace('ApiV1', ''))}QueryParams` : null;
 
@@ -23,12 +25,8 @@ const generateParams = (params, query, payload) => {
     const paramList = [
         ...(params ? params.map(param => `${param.name}${param.optional ? '?' : ''}: ${param.type}`) : []),
         ...(payload ? [`payload${payload.optional ? '?' : ''}: ${payload.type.replace('ApiV1', '')}`] : []),
-        ...(query ? [`params${query.optional ? '?' : ''}: ${queryTypeName || query.type}`] : [])
-    ];
-
-    const omitTypes = [
-        ...(query ? ["'searchParams'"] : []),
-        ...(payload ? ["'json'"] : [])
+        ...(query ? [`params${query.optional ? '?' : ''}: ${queryTypeName || query.type}`] : []),
+        'config?: AxiosRequestConfig'
     ];
 
     return paramList.join(', ');
@@ -42,13 +40,15 @@ const isUnAuthorized = unAuthorizedPathList.some(p => path.includes(p)) || isSig
 /**
 <%~ routeDocs.lines %> */
 <%= functionName %>: async (<%~ generateParams(pathParams, query, payload) %>) => {
-const response = await <%= isUnAuthorized ? 'unAuthorizedAxiosInstance' : 'axiosInstance' %>.<%= route.request.method.toLowerCase() %><<%= responseType %>>(`<%= path %>`,
-<% if (payload) { %>
-    <%= route.request.method === 'delete' ? '{ data: payload }' : 'payload' %>,
+const response = await <%= isUnAuthorized ? 'unAuthorizedAxiosInstance' : 'axiosInstance' %>.<%= method %><<%= responseType %>>(`<%= path %>`,
+<% if (isDataMethod) { %>
+    <%= payload ? 'payload' : 'undefined' %>,
 <% } %>
-<% if (query) { %>
-    { params },
-<% } %>
+    {
+        <%= query ? 'params,' : '' %>
+        <%= !isDataMethod && payload ? 'data: payload,' : '' %>
+        ...config
+    }
 )
 return response.data;
 },
