@@ -6,7 +6,16 @@ const routes = route.routes;
 const dataContracts = _.map(modelTypes, "name").map(name => name.replace('ApiV1', ''));
 const queryParamsDto = routes.filter(v=>v.specificArgs.query).map(v=>`${pascalCase(v.routeName.original.replace('ApiV1', ''))}QueryParams`)
 
-const allImports = ["axiosInstance", "unAuthorizedAxiosInstance", ...queryParamsDto, ...dataContracts]
+// multipart/form-data 요청이 있는지 확인
+const hasMultipartRequest = routes.some(route => route.raw?.requestBody?.content?.['multipart/form-data']);
+
+const allImports = [
+    "axiosInstance", 
+    "unAuthorizedAxiosInstance", 
+    ...(hasMultipartRequest ? ["multiDataAxiosInstance"] : []), 
+    ...queryParamsDto, 
+    ...dataContracts
+]
 %>
 
 import type { AxiosRequestConfig } from 'axios';

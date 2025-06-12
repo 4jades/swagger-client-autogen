@@ -19,6 +19,9 @@ const query = route.request.query;
 const method = route.request.method.toLowerCase();
 const isDataMethod = method === 'post' || method === 'put' || method === 'patch';
 
+// Swagger 스펙에서 multipart/form-data 요청인지 확인
+const isMultipartRequest = route.raw?.requestBody?.content?.['multipart/form-data'];
+
 const queryTypeName = query ? `${pascalCase(route.routeName.usage.replace('ApiV1', ''))}QueryParams` : null;
 
 const generateParams = (params, query, payload) => {
@@ -35,12 +38,18 @@ const path = route.request.path.replace(/{/g, '{').replace(/}/g, '}').slice(1,).
 const unAuthorizedPathList = ['auth/primary', 'auth/secondary', 'users/email', "users/${userId}/password"]
 const isSignUp = route.request.method.toLowerCase() === 'post' && path === 'users'
 const isUnAuthorized = unAuthorizedPathList.some(p => path.includes(p)) || isSignUp
+
+const getAxiosInstance = () => {
+    if (isUnAuthorized) return 'unAuthorizedAxiosInstance';
+    if (isMultipartRequest) return 'multiDataAxiosInstance';
+    return 'axiosInstance';
+};
 %>
 
 /**
 <%~ routeDocs.lines %> */
 <%= functionName %>: async (<%~ generateParams(pathParams, query, payload) %>) => {
-const response = await <%= isUnAuthorized ? 'unAuthorizedAxiosInstance' : 'axiosInstance' %>.<%= method %><<%= responseType %>>(`<%= path %>`,
+const response = await <%= getAxiosInstance() %>.<%= method %><<%= responseType %>>(`<%= path %>`,
 <% if (isDataMethod) { %>
     <%= payload ? 'payload' : 'undefined' %>,
 <% } %>
