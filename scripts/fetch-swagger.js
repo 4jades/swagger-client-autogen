@@ -11,21 +11,22 @@ import { writeFileToPath } from '../utils/file.js';
 function extractQueryKey(pathKey, tags, parameters) {
 	const pathSegments = pathKey.split("/").filter(Boolean);
 	const baseKey = tags?.[0] ?? "data";
-	const queryKey = [baseKey];
+	const queryKeyParts = [baseKey];
 
 	for (const segment of pathSegments) {
 		if (segment.startsWith("{") && segment.endsWith("}")) {
-			queryKey.push(`$parameters.${segment.slice(1, -1)}`);
+			queryKeyParts.push(`$parameters.${segment.slice(1, -1)}`);
 		} else if (segment !== baseKey) {
-			queryKey.push(segment);
+			queryKeyParts.push(segment);
 		}
 	}
 
 	if (parameters?.some((p) => p.in === "query")) {
-		queryKey.push("$parameters.$query");
+		queryKeyParts.push("$parameters.$query");
 	}
 
-	return queryKey;
+	// 배열을 문자열로 변환
+	return `[${queryKeyParts.join(", ")}]`;
 }
 
 function injectQueryKey(operation, queryKey) {
@@ -54,7 +55,7 @@ export function addQueryKeyToGetRequests(swaggerData) {
 		const queryKey = extractQueryKey(pathKey, getOp.tags, getOp.parameters);
 		pathItem.get = injectQueryKey(getOp, queryKey);
 
-		console.log(`✅ ${pathKey} → x-query-key: ${JSON.stringify(queryKey)}`);
+		console.log(`✅ ${pathKey} → x-query-key: ${queryKey}`);
 	}
 
 	return swaggerData;
@@ -90,9 +91,9 @@ function mergeCustomFields(newOperation, existingOperation) {
 		if (key.startsWith("x-")) {
 			// x-query-key는 새로운 것을 우선시 (이미 새로운 operation에 있음)
 			if (key === "x-query-key") {
-				// 변경 감지
-				const existingQueryKey = JSON.stringify(existingOperation[key]);
-				const newQueryKey = JSON.stringify(newOperation[key]);
+				// 변경 감지 (이제 문자열 비교)
+				const existingQueryKey = existingOperation[key];
+				const newQueryKey = newOperation[key];
 
 				if (existingQueryKey !== newQueryKey) {
 					console.warn(
@@ -204,15 +205,8 @@ try {
 			}
 		}
 
-		const yamlData = yaml.dump(finalSwaggerData, {
-			replacer: (key, value) => {
-				if (key === "x-query-key") {
-					return `[${value.join(", ")}]`;
-				}
-				return value;
-			},
-		});
-	
+		const yamlData = yaml.dump(finalSwaggerData);
+
 
 		await writeFileToPath(targetFilePath, yamlData);
 
