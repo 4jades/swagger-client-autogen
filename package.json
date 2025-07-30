@@ -1,29 +1,33 @@
 {
-  "name": "swagger-client-autogen",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "private": true,
-  "type": "module",
-  "bin": {
-    "fetch-swagger": "./scripts/fetch-swagger.js",
-    "generate-all": "./scripts/generate-all.js",
-    "generate-msw": "./scripts/generate-msw.js",
+	"name": "swagger-client-autogen",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"private": true,
+	"type": "module",
+	"bin": {
+		"fetch-swagger": "./scripts/fetch-swagger.js",
+		"generate-all": "./scripts/generate-all.js",
+		"generate-msw": "./scripts/generate-msw.js",
     "generate-voice-emr": "./scripts/generate-voice-emr.js"
-  },
-  "devDependencies": {
-    "js-yaml": "^4.1.0",
-    "minimist": "^1.2.8",
-    "msw-auto-mock": "^0.25.0",
-    "node-fetch": "^3.3.2",
-    "swagger-typescript-api": "^13.0.22",
-    "ts-to-zod": "^3.15.0"
-  },
-  "packageManager": "yarn@4.7.0"
+	},
+	"devDependencies": {
+		"js-yaml": "^4.1.0",
+		"minimist": "^1.2.8",
+		"msw-auto-mock": "^0.25.0",
+		"node-fetch": "^3.3.2",
+		"swagger-typescript-api": "^13.2.7",
+		"ts-to-zod": "^3.15.0"
+	},
+	"packageManager": "yarn@4.7.0",
+	"dependencies": {
+		"es-toolkit": "^1.39.8",
+		"ts-pattern": "^5.8.0"
+	}
 }
