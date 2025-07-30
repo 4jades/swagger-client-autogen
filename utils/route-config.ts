@@ -1,4 +1,4 @@
-import { compact, pascalCase } from "es-toolkit";
+import { camelCase, compact, pascalCase } from "es-toolkit";
 import type { ParsedRoute } from "../types/swagger-typescript-api";
 import { pipe } from "./fp.ts";
 
@@ -24,15 +24,21 @@ type RouteConfig = {
 			signatures: {
 				required: string[];
 				all: string[];
-			}
+			};
 			arguments: {
 				required: string[];
 				all: string[];
 			};
 		};
+		schema: {
+			expression: string | null;
+		};
 	};
 	response: {
 		dtoName: string | null;
+		schema: {
+			expression: string | null;
+		};
 	};
 };
 
@@ -66,9 +72,15 @@ export function generateConfig(route: ParsedRoute) {
 					all: new Array<string>(),
 				},
 			},
+			schema: {
+				expression: null,
+			},
 		},
 		response: {
 			dtoName: "",
+			schema: {
+				expression: null,
+			},
 		},
 	};
 
@@ -84,28 +96,31 @@ export function generateConfig(route: ParsedRoute) {
 		configMutators.setRequestRequiredArguments,
 		configMutators.setRequestAllArguments,
 		configMutators.setResponseDtoName,
+		configMutators.setRequestSchemaExpression,
+		configMutators.setResponseSchemaExpression,
 	)(initialRouteConfig);
 }
 
 function withRoute(route: ParsedRoute) {
 	return {
 		setPathParamsSignatures: (config: RouteConfig): RouteConfig => {
-			const { parameters } = route.request 
-			
+			const { parameters } = route.request;
+
 			return {
 				...config,
 				request: {
 					...config.request,
 					pathParams: {
 						...config.request.pathParams,
-						signatures: parameters?.map((parameter) => {
-							return compact([
-								parameter.name,
-								parameter.optional && "?",
-								":",
-								parameter.type,
-							]).join("");
-						}) ?? [],
+						signatures:
+							parameters?.map((parameter) => {
+								return compact([
+									parameter.name,
+									parameter.optional && "?",
+									":",
+									parameter.type,
+								]).join("");
+							}) ?? [],
 					},
 				},
 			};
@@ -119,9 +134,10 @@ function withRoute(route: ParsedRoute) {
 					...config.request,
 					pathParams: {
 						...config.request.pathParams,
-						arguments: parameters?.map((parameter) => {
-							return parameter.name as unknown as string;
-						}) ?? [],
+						arguments:
+							parameters?.map((parameter) => {
+								return parameter.name as unknown as string;
+							}) ?? [],
 					},
 				},
 			};
@@ -171,7 +187,7 @@ function withRoute(route: ParsedRoute) {
 			};
 		},
 		setRequestFunctionOptionsTypeExpression: (
-			config: RouteConfig
+			config: RouteConfig,
 		): RouteConfig => {
 			const { request } = route;
 
@@ -236,13 +252,13 @@ function withRoute(route: ParsedRoute) {
 							...config.request.parameters.signatures,
 							all: compact([
 								...config.request.parameters.signatures.required,
-								'kyInstance?: KyInstance',
+								"kyInstance?: KyInstance",
 								`options?: ${config.request.options.typeExpr}`,
 							]),
 						},
 					},
 				},
-			}
+			};
 		},
 		setRequestRequiredArguments: (config: RouteConfig): RouteConfig => {
 			const inlineQueryParamsArgs = route.request.query && "params";
@@ -272,13 +288,13 @@ function withRoute(route: ParsedRoute) {
 				request: {
 					...config.request,
 					parameters: {
-						...config.request.parameters,	
+						...config.request.parameters,
 						arguments: {
 							...config.request.parameters.arguments,
 							all: compact([
 								...config.request.parameters.arguments.required,
-								'kyInstance',
-								'options'
+								"kyInstance",
+								"options",
 							]),
 						},
 					},
@@ -291,6 +307,77 @@ function withRoute(route: ParsedRoute) {
 				response: {
 					...config.response,
 					dtoName: route.response.type ?? null,
+				},
+			};
+		},
+		setRequestSchemaExpression: (config: RouteConfig): RouteConfig => {
+			return {
+				...config,
+				response: {
+					...config.response,
+					schema: {
+						...config.response.schema,
+						expression: "",
+					},
+				},
+			};
+		},
+		setResponseSchemaExpression: (config: RouteConfig): RouteConfig => {
+			const { responseBodyInfo, response } = route;
+			const camelCaseDtoName = camelCase(config.response.dtoName ?? "");
+
+			const isList = Boolean(
+				responseBodyInfo?.responses.find((v) => v.isSuccess)?.content?.[
+					"application/json"
+				]?.schema?.type === "array",
+			);
+			const isDiscriminatedUnion = Boolean(
+				responseBodyInfo?.responses.find((v) => v.isSuccess)?.content?.[
+					"application/json"
+				]?.schema?.discriminator,
+			);
+
+			const isValidType = (type) => {
+				const invalidTypes = [
+					"void",
+					"any",
+					"null",
+					"undefined",
+					"object",
+					"string",
+				];
+				const invalidPattern = new RegExp(invalidTypes.join("|"), "i");
+				return type && !invalidPattern.test(type);
+			};
+
+			const getDiscriminatorMatcher = (
+				discriminator: Record<string, string>,
+			) => {
+				return Object.entries(discriminator.mapping)
+					.map(([key, value]) => {
+						return `with({ ${discriminator.propertyName}: "${key}" }, () => ${camelCase(value?.split("/")?.at(-1) ?? "")}DtoSchema)`;
+					})
+					.join(".");
+			};
+
+			const schemaExpression = isList
+				? `z.array(${camelCaseDtoName}Schema)`
+				: isDiscriminatedUnion
+					? `match(response).${getDiscriminatorMatcher(
+							responseBodyInfo?.responses.find((v) => v.isSuccess)?.content?.[
+								"application/json"
+							]?.schema?.discriminator,
+						)}.otherwise(()=>null)`
+					: `${camelCaseDtoName}Schema`;
+
+			return {
+				...config,
+				response: {
+					...config.response,
+					schema: {
+						...config.response.schema,
+						expression: isValidType(response.type) ? schemaExpression : null,
+					},
 				},
 			};
 		},

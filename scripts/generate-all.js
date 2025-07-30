@@ -219,6 +219,7 @@ const generateApiFunctionCode = async (args, outputPaths) => {
 						requestFunctionName: routeName.usage,
 						responseDtoName: route.response.type,
 						apiParametersTypeName: `T${pascalCase(moduleName)}ApiRequestParameters`,
+						responseSchemaExpression: routeConfig.response.schema.expression,
 					},
 				};
 			},
@@ -279,31 +280,54 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 					usage: buildRequestFunctionName(rawRouteInfo),
 				};
 			},
-			onCreateRoute: async (route) => {
+			onCreateRoute: (route) => {
 				const { routeName } = route;
 				const { moduleName } = route.raw;
 				const routeConfig = generateConfig(route);
 				const pascalCaseRouteName = pascalCase(routeName.usage);
 
-				// await writeFileToPath(
-				// 	"/Users/user/WebstormProjects/swagger-client-autogen/temp.json",
-				// 	JSON.stringify(
-				// 		route,
-				// 		(() => {
-				// 			const seen = new WeakSet();
-				// 			return (key, value) => {
-				// 				if (typeof value === "object" && value !== null) {
-				// 					if (seen.has(value)) {
-				// 						return "[Circular]";
+				// const saveRoute = async (route) => {
+				// 	await writeFileToPath(
+				// 		`/Users/user/WebstormProjects/swagger-client-autogen/${routeName.usage}.json`,
+				// 		JSON.stringify(
+				// 			route,
+				// 			(() => {
+				// 				const seen = new WeakSet();
+				// 				return (key, value) => {
+				// 					if (typeof value === "object" && value !== null) {
+				// 						if (seen.has(value)) {
+				// 							return "[Circular]";
+				// 						}
+				// 						seen.add(value);
 				// 					}
-				// 					seen.add(value);
-				// 				}
-				// 				return value;
-				// 			};
-				// 		})(),
-				// 		2,
-				// 	),
-				// );
+				// 					return value;
+				// 				};
+				// 			})(),
+				// 			2,
+				// 		),
+				// 	);
+				// };
+
+				// if (route.raw.operationId === "get_chats_chats_get") {
+				// 	await saveRoute(route);
+				// } else if (
+				// 	route.raw.operationId ===
+				// 	"submit_problem_problems__problem_id__submit_post"
+				// ) {
+				// 	await saveRoute(route);
+				// } else if (
+				// 	route.raw.operationId === "init_options_chats_init_options_get"
+				// ) {
+				// 	console.log(routeConfig);
+				// 	route.responseBodyInfo;
+				// 	await saveRoute(route);
+				// } else if (
+				// 	route.raw.operationId === "delete_chat_chats__chat_id__delete"
+				// ) {
+				// 	await saveRoute(route);
+				// }
+
+				// console.log(routeConfig.request.parameters.signatures.required);
 
 				return {
 					...route,
@@ -320,7 +344,7 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 							queryKeyArgs: buildQueryKeyArgs(routeConfig),
 							queryKeyObjectName: `${moduleName.toUpperCase()}_QUERY_KEY`,
 							queryKeyConstanstName: buildQueryKeyConstantsName(route),
-							queryKeyConstanstFunction: `(${routeConfig.request.parameters.signatures.all.join(", ")})=>${buildQueryKeyArray(route)}`,
+							queryKeyConstanstFunction: `(${routeConfig.request.parameters.signatures.required.join(", ")})=>${buildQueryKeyArray(route)}`,
 							queryHookName: `use${pascalCaseRouteName}Query`,
 							suspenseQueryHookName: `use${pascalCaseRouteName}SuspenseQuery`,
 						},
@@ -442,7 +466,7 @@ const main = async () => {
 	}
 
 	try {
-		args.createSchema && (await generateSchemaCode(args, outputPaths));
+		// args.createSchema && (await generateSchemaCode(args, outputPaths));
 		await generateApiFunctionCode(args, outputPaths);
 		await generateTanstackQueryCode(args, outputPaths);
 	} catch (e) {
