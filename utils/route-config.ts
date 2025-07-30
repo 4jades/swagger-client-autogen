@@ -1,6 +1,7 @@
 import { camelCase, compact, pascalCase } from "es-toolkit";
 import type { ParsedRoute } from "../types/swagger-typescript-api";
 import { pipe } from "./fp.ts";
+import { getDiscriminatorMatcher, isValidType } from "./route-utils.ts";
 
 type RouteConfig = {
 	request: {
@@ -311,13 +312,33 @@ function withRoute(route: ParsedRoute) {
 			};
 		},
 		setRequestSchemaExpression: (config: RouteConfig): RouteConfig => {
+			const { requestBodyInfo } = route;
+			const camelCaseDtoName = camelCase(config.request.payload.dtoName ?? "");
+
+			const isList = Boolean(requestBodyInfo?.schema?.type === "array");
+			const isDiscriminatedUnion = Boolean(
+				requestBodyInfo?.schema?.discriminator,
+			);
+
+			const schemaExpression = isList
+				? `z.array(${camelCaseDtoName}Schema)`
+				: isDiscriminatedUnion
+					? `match(payload).${getDiscriminatorMatcher(
+							//@ts-expect-error
+							requestBodyInfo?.content?.["application/json"]?.schema
+								?.discriminator,
+						)}.otherwise(()=>null)`
+					: `${camelCaseDtoName}Schema`;
+
 			return {
 				...config,
-				response: {
-					...config.response,
+				request: {
+					...config.request,
 					schema: {
-						...config.response.schema,
-						expression: "",
+						...config.request.schema,
+						expression: isValidType(config.request.payload.dtoName)
+							? schemaExpression
+							: null,
 					},
 				},
 			};
@@ -336,29 +357,6 @@ function withRoute(route: ParsedRoute) {
 					"application/json"
 				]?.schema?.discriminator,
 			);
-
-			const isValidType = (type) => {
-				const invalidTypes = [
-					"void",
-					"any",
-					"null",
-					"undefined",
-					"object",
-					"string",
-				];
-				const invalidPattern = new RegExp(invalidTypes.join("|"), "i");
-				return type && !invalidPattern.test(type);
-			};
-
-			const getDiscriminatorMatcher = (
-				discriminator: Record<string, string>,
-			) => {
-				return Object.entries(discriminator.mapping)
-					.map(([key, value]) => {
-						return `with({ ${discriminator.propertyName}: "${key}" }, () => ${camelCase(value?.split("/")?.at(-1) ?? "")}DtoSchema)`;
-					})
-					.join(".");
-			};
 
 			const schemaExpression = isList
 				? `z.array(${camelCaseDtoName}Schema)`
