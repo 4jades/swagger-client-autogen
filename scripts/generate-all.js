@@ -210,6 +210,7 @@ const generateApiFunctionCode = async (args, outputPaths) => {
 
 				return {
 					...route,
+					routeConfig,
 					customeMeta: {
 						requestFunctionParameter:
 							routeConfig.request.parameters.signatures.all.join(", "),
@@ -281,55 +282,57 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 					usage: buildRequestFunctionName(rawRouteInfo),
 				};
 			},
-			onCreateRoute: async (route) => {
+			onCreateRoute: (route) => {
 				const { routeName } = route;
 				const { moduleName } = route.raw;
 				const routeConfig = generateConfig(route);
 				const pascalCaseRouteName = pascalCase(routeName.usage);
 
-				const saveRoute = async (route) => {
-					await writeFileToPath(
-						`/Users/user/WebstormProjects/swagger-client-autogen/${routeName.usage}.json`,
-						JSON.stringify(
-							route,
-							(() => {
-								const seen = new WeakSet();
-								return (key, value) => {
-									if (typeof value === "object" && value !== null) {
-										if (seen.has(value)) {
-											return "[Circular]";
-										}
-										seen.add(value);
-									}
-									return value;
-								};
-							})(),
-							2,
-						),
-					);
-				};
+				// const saveRoute = async (route) => {
+				// 	await writeFileToPath(
+				// 		`/Users/user/WebstormProjects/swagger-client-autogen/${routeName.usage}.json`,
+				// 		JSON.stringify(
+				// 			route,
+				// 			(() => {
+				// 				const seen = new WeakSet();
+				// 				return (key, value) => {
+				// 					if (typeof value === "object" && value !== null) {
+				// 						if (seen.has(value)) {
+				// 							return "[Circular]";
+				// 						}
+				// 						seen.add(value);
+				// 					}
+				// 					return value;
+				// 				};
+				// 			})(),
+				// 			2,
+				// 		),
+				// 	);
+				// };
 
 				if (route.raw.operationId === "get_chats_chats_get") {
-					await saveRoute(route);
+					// await saveRoute(route);
 				} else if (
 					route.raw.operationId ===
 					"submit_problem_problems__problem_id__submit_post"
 				) {
-					console.log(routeConfig);
-					await saveRoute(route);
+					console.log(JSON.stringify(routeConfig, null, 2));
+					// await saveRoute(route);
 				} else if (
 					route.raw.operationId === "init_options_chats_init_options_get"
 				) {
 					route.responseBodyInfo;
-					await saveRoute(route);
+					// await saveRoute(route);
 				} else if (
 					route.raw.operationId === "delete_chat_chats__chat_id__delete"
 				) {
-					await saveRoute(route);
+					// await saveRoute(route);
 				} else if (
 					route.raw.operationId === "batch_upload_files_temp_batch_upload_post"
 				) {
-					await saveRoute(route);
+					console.log(routeConfig);
+
+					// await saveRoute(route);
 				}
 
 				// console.log(routeConfig.request.parameters.signatures.required);

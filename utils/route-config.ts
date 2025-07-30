@@ -32,12 +32,14 @@ type RouteConfig = {
 			};
 		};
 		schema: {
+			list: string[];
 			expression: string | null;
 		};
 	};
 	response: {
 		dtoName: string | null;
 		schema: {
+			list: string[];
 			expression: string | null;
 		};
 	};
@@ -74,12 +76,14 @@ export function generateConfig(route: ParsedRoute) {
 				},
 			},
 			schema: {
+				list: new Array<string>(),
 				expression: null,
 			},
 		},
 		response: {
 			dtoName: "",
 			schema: {
+				list: new Array<string>(),
 				expression: null,
 			},
 		},
@@ -97,8 +101,8 @@ export function generateConfig(route: ParsedRoute) {
 		configMutators.setRequestRequiredArguments,
 		configMutators.setRequestAllArguments,
 		configMutators.setResponseDtoName,
-		configMutators.setRequestSchemaExpression,
-		configMutators.setResponseSchemaExpression,
+		configMutators.setRequestSchema,
+		configMutators.setResponseSchema,
 	)(initialRouteConfig);
 }
 
@@ -311,31 +315,35 @@ function withRoute(route: ParsedRoute) {
 				},
 			};
 		},
-		setRequestSchemaExpression: (config: RouteConfig): RouteConfig => {
+		setRequestSchema: (config: RouteConfig): RouteConfig => {
 			const { requestBodyInfo } = route;
-			const camelCaseDtoName = camelCase(config.request.payload.dtoName ?? "");
+			const nomalSchemaName = `${camelCase(config.request.payload.dtoName ?? "")}Schema`;
 
 			const isList = Boolean(requestBodyInfo?.schema?.type === "array");
 			const isDiscriminatedUnion = Boolean(
 				requestBodyInfo?.schema?.discriminator,
 			);
+			const discriminator =
+				//@ts-expect-error
+				requestBodyInfo?.content?.["application/json"]?.schema?.discriminator;
 
 			const schemaExpression = isList
-				? `z.array(${camelCaseDtoName}Schema)`
+				? `z.array(${nomalSchemaName})`
 				: isDiscriminatedUnion
-					? `match(payload).${getDiscriminatorMatcher(
-							//@ts-expect-error
-							requestBodyInfo?.content?.["application/json"]?.schema
-								?.discriminator,
-						)}.otherwise(()=>null)`
-					: `${camelCaseDtoName}Schema`;
+					? `match(payload).${getDiscriminatorMatcher(discriminator)}.otherwise(()=>null)`
+					: nomalSchemaName;
 
 			return {
 				...config,
 				request: {
 					...config.request,
 					schema: {
-						...config.request.schema,
+						list: isDiscriminatedUnion
+							? Object.values(discriminator.mapping).map(
+									(v) =>
+										`${camelCase((v as string).split("/").at(-1) ?? "")}DtoSchema`,
+								)
+							: [nomalSchemaName],
 						expression: isValidType(config.request.payload.dtoName)
 							? schemaExpression
 							: null,
@@ -343,9 +351,9 @@ function withRoute(route: ParsedRoute) {
 				},
 			};
 		},
-		setResponseSchemaExpression: (config: RouteConfig): RouteConfig => {
+		setResponseSchema: (config: RouteConfig): RouteConfig => {
 			const { responseBodyInfo, response } = route;
-			const camelCaseDtoName = camelCase(config.response.dtoName ?? "");
+			const nomalSchemaName = `${camelCase(config.response.dtoName ?? "")}Schema`;
 
 			const isList = Boolean(
 				responseBodyInfo?.responses.find((v) => v.isSuccess)?.content?.[
@@ -357,23 +365,26 @@ function withRoute(route: ParsedRoute) {
 					"application/json"
 				]?.schema?.discriminator,
 			);
+			const discriminator = responseBodyInfo?.responses.find((v) => v.isSuccess)
+				?.content?.["application/json"]?.schema?.discriminator;
 
 			const schemaExpression = isList
-				? `z.array(${camelCaseDtoName}Schema)`
+				? `z.array(${nomalSchemaName})`
 				: isDiscriminatedUnion
-					? `match(response).${getDiscriminatorMatcher(
-							responseBodyInfo?.responses.find((v) => v.isSuccess)?.content?.[
-								"application/json"
-							]?.schema?.discriminator,
-						)}.otherwise(()=>null)`
-					: `${camelCaseDtoName}Schema`;
+					? `match(response).${getDiscriminatorMatcher(discriminator)}.otherwise(()=>null)`
+					: nomalSchemaName;
 
 			return {
 				...config,
 				response: {
 					...config.response,
 					schema: {
-						...config.response.schema,
+						list: isDiscriminatedUnion
+							? Object.values(discriminator.mapping).map(
+									(v) =>
+										`${camelCase((v as string).split("/").at(-1) ?? "")}DtoSchema`,
+								)
+							: [nomalSchemaName],
 						expression: isValidType(response.type) ? schemaExpression : null,
 					},
 				},
