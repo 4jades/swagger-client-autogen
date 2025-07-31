@@ -327,25 +327,26 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 
 				return {
 					...route,
-					customeMeta: {
-						requestFunctionParameter:
-							routeConfig.request.parameters.signatures.all.join(", "),
-						requestArgs:
-							routeConfig.request.parameters.arguments.all.join(", "),
+					routeConfig,
+					moduleConfig: {
 						apiInstanceName: `${moduleName}Api`,
-						requestFunctionName: routeName.usage,
-						responseDtoName: route.response.type,
 						apiParametersTypeName: `T${pascalCase(moduleName)}ApiRequestParameters`,
-						queryHookMeta: {
-							queryKeyArgs: buildQueryKeyArgs(routeConfig),
+						query: {
 							queryKeyObjectName: `${moduleName.toUpperCase()}_QUERY_KEY`,
+						},
+						mutation: {
+							mutationKeyObjectName: `${moduleName.toUpperCase()}_MUTATION_KEY`,
+						},
+					},
+					hookConfig: {
+						query: {
+							queryKeyArgs: buildQueryKeyArgs(routeConfig),
 							queryKeyConstanstName: buildQueryKeyConstantsName(route),
 							queryKeyConstanstFunction: `(${routeConfig.request.parameters.signatures.required.join(", ")})=>${buildQueryKeyArray(route)}`,
 							queryHookName: `use${pascalCaseRouteName}Query`,
 							suspenseQueryHookName: `use${pascalCaseRouteName}SuspenseQuery`,
 						},
-						mutationHookMeta: {
-							mutationKeyObjectName: `${moduleName.toUpperCase()}_MUTATION_KEY`,
+						mutation: {
 							mutationKeyConstanstName: buildMutationKeyConstantsName(route),
 							mutationKeyConstanstContent:
 								buildMutationKeyConstanstContent(route),
