@@ -204,24 +204,15 @@ const generateApiFunctionCode = async (args, outputPaths) => {
 				};
 			},
 			onCreateRoute: (route) => {
-				const { routeName } = route;
 				const { moduleName } = route.raw;
 				const routeConfig = generateConfig(route);
 
 				return {
 					...route,
 					routeConfig,
-					customeMeta: {
-						requestFunctionParameter:
-							routeConfig.request.parameters.signatures.all.join(", "),
-						requestArgs:
-							routeConfig.request.parameters.arguments.all.join(", "),
+					moduleConfig: {
 						apiClassName: `${pascalCase(moduleName)}Api`,
-						requestFunctionName: routeName.usage,
-						responseDtoName: route.response.type,
 						apiParametersTypeName: `T${pascalCase(moduleName)}ApiRequestParameters`,
-						responseSchemaExpression: routeConfig.response.schema.expression,
-						requestSchemaExpression: routeConfig.request.schema.expression,
 					},
 				};
 			},
@@ -316,7 +307,7 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 					route.raw.operationId ===
 					"submit_problem_problems__problem_id__submit_post"
 				) {
-					console.log(JSON.stringify(routeConfig, null, 2));
+					// console.log(JSON.stringify(routeConfig, null, 2));
 					// await saveRoute(route);
 				} else if (
 					route.raw.operationId === "init_options_chats_init_options_get"
@@ -330,12 +321,9 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 				} else if (
 					route.raw.operationId === "batch_upload_files_temp_batch_upload_post"
 				) {
-					console.log(routeConfig);
-
+					// console.log(routeConfig);
 					// await saveRoute(route);
 				}
-
-				// console.log(routeConfig.request.parameters.signatures.required);
 
 				return {
 					...route,

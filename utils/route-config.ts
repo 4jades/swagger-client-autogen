@@ -5,6 +5,7 @@ import { getDiscriminatorMatcher, isValidType } from "./route-utils.ts";
 
 type RouteConfig = {
 	request: {
+		functionName: string;
 		pathParams: {
 			signatures: string[];
 			arguments: string[];
@@ -49,6 +50,7 @@ export function generateConfig(route: ParsedRoute) {
 	const configMutators = withRoute(route);
 	const initialRouteConfig: RouteConfig = {
 		request: {
+			functionName: route.routeName.usage,
 			pathParams: {
 				signatures: new Array<string>(),
 				arguments: new Array<string>(),
@@ -90,6 +92,7 @@ export function generateConfig(route: ParsedRoute) {
 	};
 
 	return pipe(
+		configMutators.setRequestFunctionName,
 		configMutators.setPathParamsSignatures,
 		configMutators.setPathParamsArguments,
 		configMutators.setQueryParamsDtoName,
@@ -108,6 +111,15 @@ export function generateConfig(route: ParsedRoute) {
 
 function withRoute(route: ParsedRoute) {
 	return {
+		setRequestFunctionName: (config: RouteConfig): RouteConfig => {
+			return {
+				...config,
+				request: {
+					...config.request,
+					functionName: route.routeName.usage,
+				},
+			};
+		},
 		setPathParamsSignatures: (config: RouteConfig): RouteConfig => {
 			const { parameters } = route.request;
 
