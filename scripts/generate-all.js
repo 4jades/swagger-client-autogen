@@ -4,13 +4,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { pascalCase } from "es-toolkit";
 import minimist from "minimist";
-import { generateApi } from "swagger-typescript-api";
 import { generate } from "ts-to-zod";
-import { fetchSwagger } from "../utils/fetch-swagger.js";
 import { writeFileToPath } from "../utils/file.ts";
-import { AnyOfSchemaParser } from "../utils/parser.js";
 import { generateConfig } from "../utils/route-config.ts";
 import { buildRequestFunctionName } from "../utils/route-utils.ts";
+import { generateApiCode } from "../utils/swagger-typescript-api.ts";
 import {
 	buildMutationKeyConstanstContent,
 	buildMutationKeyConstantsName,
@@ -18,7 +16,6 @@ import {
 	buildQueryKeyArray,
 	buildQueryKeyConstantsName,
 } from "../utils/tanstack-query-utils.ts";
-import { isUrl } from "../utils/url.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -154,34 +151,6 @@ Schema Path: ${outputPaths.schema.relativePath}
 	);
 };
 
-export const generateApiCode = async ({
-	uri,
-	username,
-	password,
-	templates,
-	...params
-}) => {
-	const isLocal = !isUrl(uri);
-
-	return generateApi({
-		input: isLocal ? path.resolve(process.cwd(), uri) : undefined,
-		spec: !isLocal && (await fetchSwagger(uri, username, password)),
-		templates: templates,
-		generateClient: true,
-		generateUnionEnums: true,
-		cleanOutput: false,
-		silent: true,
-		modular: true,
-		moduleNameFirstTag: true,
-		moduleNameIndex: 1,
-		typeSuffix: "Dto",
-		generateRouteTypes: true,
-		schemaParsers: {
-			complexAnyOf: AnyOfSchemaParser,
-		},
-		...params,
-	});
-};
 
 const generateApiFunctionCode = async (args, outputPaths) => {
 	const { projectTemplate, uri, username, password } = args;
@@ -211,6 +180,7 @@ const generateApiFunctionCode = async (args, outputPaths) => {
 					moduleConfig: {
 						apiClassName: `${pascalCase(moduleName)}Api`,
 						apiParametersTypeName: `T${pascalCase(moduleName)}ApiRequestParameters`,
+						createSchema: args.createSchema,
 					},
 				};
 			},
@@ -256,6 +226,9 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 		templateInfos: [
 			{ name: "api", fileName: "queries" },
 			{ name: "routeTypes", fileName: "mutations" },
+			/**
+			 * @description: 아래 값들은 사용되지 않지만, 모든 templateInfos 값을 넣어야 하기 때문에 기본값으로 추가함
+			 */
 			{ name: "dataContractJsDoc", fileName: "data-contract-jsdoc" },
 			{ name: "interfaceDataContract", fileName: "interface-data-contract" },
 			{ name: "typeDataContract", fileName: "type-data-contract" },
@@ -382,23 +355,15 @@ const generateSchemaCode = async (args, outputPaths) => {
 			);
 		}
 
-		if (fileName === "stream-utils") {
-			await writeFileToPath(
-				path.resolve(process.cwd(), "src/shared/api/stream.gen.ts"),
-				fileContent,
-			);
-		}
+		const outputPath = {
+			"stream-utils": "src/shared/api/stream.gen.ts",
+			"api-utils": "src/shared/api/utils.gen.ts",
+			"type-guards": "src/shared/api/type-guards.gen.ts",
+		}[fileName];
 
-		if (fileName === "api-utils") {
+		if (outputPath) {
 			await writeFileToPath(
-				path.resolve(process.cwd(), "src/shared/api/utils.gen.ts"),
-				fileContent,
-			);
-		}
-
-		if (fileName === "type-guards") {
-			await writeFileToPath(
-				path.resolve(process.cwd(), "src/shared/api/type-guards.gen.ts"),
+				path.resolve(process.cwd(), outputPath),
 				fileContent,
 			);
 		}
@@ -415,7 +380,7 @@ const main = async () => {
 	}
 
 	try {
-		// args.createSchema && (await generateSchemaCode(args, outputPaths));
+		args.createSchema && (await generateSchemaCode(args, outputPaths));
 		await generateApiFunctionCode(args, outputPaths);
 		await generateTanstackQueryCode(args, outputPaths);
 	} catch (e) {

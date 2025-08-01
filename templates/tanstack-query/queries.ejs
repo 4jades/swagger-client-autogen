@@ -7,9 +7,7 @@ const { utils, route, modelTypes, config } = it;
 
 const { moduleName, routes } = route;
 
-const queryRoutes = routes.filter(({ request: { method } }) => method === 'get').map(route=>({
-    ...route,
-}))
+const queryRoutes = routes.filter(({ request: { method } }) => method === 'get');
 const moduleConfig = routes.at(0)?.moduleConfig;
 %>
 

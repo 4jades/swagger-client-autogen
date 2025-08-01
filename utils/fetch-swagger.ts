@@ -1,4 +1,4 @@
-export const fetchSwagger = async (url, username, password) => {
+export const fetchSwagger = async (url: string, username: string, password: string) => {
   const credentials = btoa(`${username}:${password}`);
 
   try {

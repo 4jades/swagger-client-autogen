@@ -16,7 +16,7 @@ import type { KyInstance, Options } from 'ky';
 import { type ZodSchema, z } from 'zod';
 import { match } from 'ts-pattern';
 
-<%~ includeFile('./schema-import.ejs', { ...it }) %>
+<%~ moduleConfig.createSchema && includeFile('./schema-import.ejs', { ...it }) %>
 <%~ includeFile('./dto-import.ejs', { ...it }) %>
 <%~ includeFile('./stream-import.ejs', { ...it }) %>
 import { validateSchema, createSearchParams } from '@/shared/api/utils.gen';
