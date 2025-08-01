@@ -32,9 +32,5 @@ export type InputCodegenConfig = {
 };
 
 export type CodegenConfig = Omit<InputCodegenConfig, "outputMap"> & {
-  outputMap: Required<InputCodegenConfig["outputMap"]> & {
-    dtoGen: {
-      output: string;
-    }
-  }
-};
+		outputMap: Required<InputCodegenConfig["outputMap"]>;
+	};

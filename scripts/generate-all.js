@@ -92,7 +92,7 @@ export default {
 };
 
 
-const generateApiFunctionCode = async (config, outputPaths) => {
+const generateApiFunctionCode = async (config) => {
 	const { projectTemplate, uri, username, password } = config;
 	const templatePath = projectTemplate
 		? path.resolve(process.cwd(), projectTemplate)
@@ -112,7 +112,7 @@ const generateApiFunctionCode = async (config, outputPaths) => {
 			},
 			onCreateRoute: (route) => {
 				const routeConfig = generateConfig(route);
-				const moduleConfig = generateModuleConfig(route, config.createSchema);
+				const moduleConfig = generateModuleConfig(route, config);
 
 				return {
 					...route,
