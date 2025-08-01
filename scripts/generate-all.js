@@ -5,9 +5,10 @@ import { fileURLToPath } from "node:url";
 import { pascalCase } from "es-toolkit";
 import minimist from "minimist";
 import { generate } from "ts-to-zod";
+import { setupCodegenConfig } from "../config-builders/codegen-config.ts";
+import { generateModuleConfig } from "../config-builders/module-config.ts";
+import { generateConfig } from "../config-builders/route-config.ts";
 import { writeFileToPath } from "../utils/file.ts";
-import { generateModuleConfig } from "../utils/module-config.ts";
-import { generateConfig } from "../utils/route-config.ts";
 import { buildRequestFunctionName } from "../utils/route-utils.ts";
 import { generateApiCode } from "../utils/swagger-typescript-api.ts";
 import {
@@ -23,138 +24,76 @@ const __dirname = path.dirname(__filename);
 
 const parseArguments = () => {
 	const argv = minimist(process.argv.slice(2), {
-		string: [
-			"uri",
-			"username",
-			"password",
-			"dto-output-path",
-			"api-output-path",
-			"api-instance-output-path",
-			"query-output-path",
-			"mutation-output-path",
-			"schema-output-path",
-			"stream-output-path",
-			"project-template",
-		],
-		boolean: ["create-schema"],
+		string: ["config"],
 		alias: {
-			u: "uri",
-			un: "username",
-			pw: "password",
-			dp: "dto-output-path",
-			ap: "api-output-path",
-			aip: "api-instance-output-path",
-			qp: "query-output-path",
-			mp: "mutation-output-path",
-			pt: "project-template",
-			sp: "schema-output-path",
-			cs: "create-schema",
-			so: "stream-output-path",
+			c: "config",
 		},
 	});
 
 	return {
-		uri: argv.uri,
-		username: argv.username,
-		password: argv.password,
-		dtoOutputPath: argv["dto-output-path"],
-		apiOutputPath: argv["api-output-path"],
-		apiInstanceOutputPath: argv["api-instance-output-path"],
-		queryOutputPath: argv["query-output-path"],
-		mutationOutputPath: argv["mutation-output-path"],
-		schemaOutputPath: argv["schema-output-path"],
-		projectTemplate: argv["project-template"],
-		createSchema: argv["create-schema"],
+		configPath: argv.config ?? "swagger-client-autogen.config.ts",
 	};
 };
 
-const setupOutputPaths = (args) => {
-	return {
-		dto: {
-			relativePath: args.dtoOutputPath ?? "src/shared/api/dto.ts",
-			absolutePath: path.resolve(
-				process.cwd(),
-				args.dtoOutputPath ?? "src/shared/api/dto.ts",
-			),
-		},
-		api: {
-			relativePath:
-				args.apiOutputPath ?? "src/entities/{moduleName}/api/index.ts",
-			absolutePath: path.resolve(
-				process.cwd(),
-				args.apiOutputPath ?? "src/entities/{moduleName}/api/index.ts",
-			),
-		},
-		apiInstance: {
-			relativePath:
-				args.apiInstanceOutputPath ??
-				"src/entities/{moduleName}/api/instance.ts",
-			absolutePath: path.resolve(
-				process.cwd(),
-				args.apiInstanceOutputPath ??
-					"src/entities/{moduleName}/api/instance.ts",
-			),
-		},
-		query: {
-			relativePath:
-				args.queryOutputPath ?? "src/entities/{moduleName}/api/queries.ts",
-			absolutePath: path.resolve(
-				process.cwd(),
-				args.queryOutputPath ?? "src/entities/{moduleName}/api/queries.ts",
-			),
-		},
-		mutation: {
-			relativePath:
-				args.mutationOutputPath ?? "src/entities/{moduleName}/api/mutations.ts",
-			absolutePath: path.resolve(
-				process.cwd(),
-				args.mutationOutputPath ?? "src/entities/{moduleName}/api/mutations.ts",
-			),
-		},
-		schema: {
-			relativePath: args.schemaOutputPath ?? "src/shared/api/schema.gen.ts",
-			absolutePath: path.resolve(
-				process.cwd(),
-				args.schemaOutputPath ?? "src/shared/api/schema.gen.ts",
-			),
-		},
-		dtoGen: {
-			relativePath: "src/shared/api/dto.gen.ts",
-			absolutePath: path.resolve(process.cwd(), "src/shared/api/dto.gen.ts"),
-		},
-	};
+const loadConfig = async (configPath) => {
+	try {
+		const configModule = await import(path.resolve(process.cwd(), configPath));
+		return setupCodegenConfig(configModule.config);
+	} catch (error) {
+		console.error(`❌ 설정 파일을 불러올 수 없습니다: ${configPath}`);
+		console.error(error.message);
+		process.exit(1);
+	}
 };
 
-const printUsage = (outputPaths) => {
+const printUsage = () => {
 	console.error(
 		"❗️ Error: Please provide the swagger URL or swagger file name",
 	);
-	console.error(
-		"Usage: node generate-all.js --uri <swagger-url|swagger-file-name> " +
-			"[--username <username>] [--password <password>] " +
-			"[--dto-output-path <dto-output-path>] " +
-			"[--api-output-path <api-output-path>] " +
-			"[--query-output-path <query-output-path>] " +
-			"[--mutation-output-path <mutation-output-path>] " +
-			"[--schema-output-path <schema-output-path>] " +
-			"[--project-template <project-template>]" +
-			"[--create-schema]",
-	);
-	console.error(
-		`Current output paths:
-DTO Path: ${outputPaths.dto.relativePath}
-API Path: ${outputPaths.api.relativePath}
-Query Path: ${outputPaths.query.relativePath}
-Mutation Path: ${outputPaths.mutation.relativePath}
-Project Template Path: ${outputPaths.projectTemplate}
-Schema Path: ${outputPaths.schema.relativePath}
-`,
-	);
+	console.error("Usage: node generate-all.js [--config <config-file-path>]");
+	console.error("Default config file: swagger-client-autogen.config.ts");
+	console.error("");
+	console.error("Example config file (swagger-client-autogen.config.ts):");
+	console.error(`
+export default {
+  uri: "https://api.example.com/swagger.json",
+  username: "user",
+  password: "pass",
+  createSchema: true,
+  outputMap: {
+    dto: {
+      output: "src/shared/api/dto.ts",
+      alias: "@/shared/api/dto.ts"
+    },
+    api: {
+      output: "src/entities/{moduleName}/api/index.ts",
+      alias: "@/entities/{moduleName}/api/index.ts"
+    },
+    apiInstance: {
+      output: "src/entities/{moduleName}/api/instance.ts",
+      alias: "@/entities/{moduleName}/api/instance.ts"
+    },
+    query: {
+      output: "src/entities/{moduleName}/api/queries.ts",
+      alias: "@/entities/{moduleName}/api/queries.ts"
+    },
+    mutation: {
+      output: "src/entities/{moduleName}/api/mutations.ts",
+      alias: "@/entities/{moduleName}/api/mutations.ts"
+    },
+    schema: {
+      output: "src/shared/api/schema.gen.ts",
+      alias: "@/shared/api/schema.gen.ts"
+    },
+  },
+  projectTemplate: "./templates",
+};
+`);
 };
 
 
-const generateApiFunctionCode = async (args, outputPaths) => {
-	const { projectTemplate, uri, username, password } = args;
+const generateApiFunctionCode = async (config, outputPaths) => {
+	const { projectTemplate, uri, username, password } = config;
 	const templatePath = projectTemplate
 		? path.resolve(process.cwd(), projectTemplate)
 		: path.resolve(__dirname, "../templates");
@@ -173,7 +112,7 @@ const generateApiFunctionCode = async (args, outputPaths) => {
 			},
 			onCreateRoute: (route) => {
 				const routeConfig = generateConfig(route);
-				const moduleConfig = generateModuleConfig(route, args.createSchema);
+				const moduleConfig = generateModuleConfig(route, config.createSchema);
 
 				return {
 					...route,
@@ -188,18 +127,18 @@ const generateApiFunctionCode = async (args, outputPaths) => {
 		if (fileName === "http-client") continue;
 
 		if (fileName === "data-contracts") {
-			await writeFileToPath(outputPaths.dto.absolutePath, fileContent);
+			await writeFileToPath(config.outputMap.dto.output, fileContent);
 		} else {
 			const moduleName = fileName.replace("Route", "").toLowerCase();
 
 			if (fileName.match(/Route$/)) {
-				const output = outputPaths.apiInstance.absolutePath.replace(
+				const output = config.outputMap.apiInstance.output.replace(
 					"{moduleName}",
 					moduleName,
 				);
 				await writeFileToPath(output, fileContent);
 			} else {
-				const output = outputPaths.api.absolutePath.replace(
+				const output = config.outputMap.api.output.replace(
 					"{moduleName}",
 					moduleName,
 				);
@@ -209,8 +148,8 @@ const generateApiFunctionCode = async (args, outputPaths) => {
 	}
 };
 
-const generateTanstackQueryCode = async (args, outputPaths) => {
-	const { projectTemplate, uri, username, password } = args;
+const generateTanstackQueryCode = async (config) => {
+	const { projectTemplate, uri, username, password } = config;
 	const templatePath = projectTemplate
 		? path.resolve(process.cwd(), projectTemplate, "tanstack-query")
 		: path.resolve(__dirname, "../templates/tanstack-query");
@@ -245,7 +184,7 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 				const { routeName } = route;
 				const { moduleName } = route.raw;
 				const routeConfig = generateConfig(route);
-				const moduleConfig = generateModuleConfig(route, args.createSchema);
+				const moduleConfig = generateModuleConfig(route, config.createSchema);
 				const pascalCaseRouteName = pascalCase(routeName.usage);
 
 				return {
@@ -290,13 +229,13 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 		const moduleName = fileName.replace("Route", "").toLowerCase();
 
 		if (fileName.match(/Route$/)) {
-			const output = outputPaths.mutation.absolutePath.replace(
+			const output = config.outputMap.mutation.output.replace(
 				"{moduleName}",
 				moduleName,
 			);
 			await writeFileToPath(output, fileContent);
 		} else {
-			const output = outputPaths.query.absolutePath.replace(
+			const output = config.outputMap.query.output.replace(
 				"{moduleName}",
 				moduleName,
 			);
@@ -305,8 +244,8 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 	}
 };
 
-const generateSchemaCode = async (args, outputPaths) => {
-	const { projectTemplate, uri, username, password } = args;
+const generateSchemaCode = async (config) => {
+	const { projectTemplate, uri, username, password } = config;
 	const templatePath = projectTemplate
 		? path.resolve(process.cwd(), projectTemplate)
 		: path.resolve(__dirname, "../templates");
@@ -340,7 +279,7 @@ const generateSchemaCode = async (args, outputPaths) => {
 		hooks: {
 			onCreateRoute: (route) => {
 				const routeConfig = generateConfig(route);
-				const moduleConfig = generateModuleConfig(route, args.createSchema);
+				const moduleConfig = generateModuleConfig(route, config);
 
 				return {
 					...route,
@@ -357,13 +296,14 @@ const generateSchemaCode = async (args, outputPaths) => {
 		if (fileName === "data-contracts") {
 			const schema = generate({ sourceText: fileContent });
 			await writeFileToPath(
-				path.resolve(process.cwd(), outputPaths.schema.relativePath),
+				path.resolve(process.cwd(), config.outputMap.schema.output),
 				schema
 					.getZodSchemasFile()
 					.replaceAll("datetime()", "datetime({ offset: true })"),
 			);
 		}
 
+		//TODO 이부분도 config로 입력 받을 수 있게 수정하기
 		const outputPath = {
 			"stream-utils": "src/shared/api/stream.gen.ts",
 			"api-utils": "src/shared/api/utils.gen.ts",
@@ -381,17 +321,17 @@ const generateSchemaCode = async (args, outputPaths) => {
 
 const main = async () => {
 	const args = parseArguments();
-	const outputPaths = setupOutputPaths(args);
+	const config = await loadConfig(args.configPath);
 
-	if (!args.uri) {
-		printUsage(outputPaths);
+	if (!config.uri) {
+		printUsage();
 		process.exit(1);
 	}
 
 	try {
-		args.createSchema && (await generateSchemaCode(args, outputPaths));
-		await generateApiFunctionCode(args, outputPaths);
-		await generateTanstackQueryCode(args, outputPaths);
+		config.createSchema && (await generateSchemaCode(config));
+		await generateApiFunctionCode(config);
+		await generateTanstackQueryCode(config);
 	} catch (e) {
 		console.error(e);
 	}

@@ -1,6 +1,6 @@
 import { compact } from "es-toolkit";
+import type { generateConfig } from "../config-builders/route-config";
 import type { ParsedRoute } from "../types/swagger-typescript-api";
-import type { generateConfig } from "./route-config";
 
 export const buildQueryKeyConstantsName = ({
 	request: { path, method },

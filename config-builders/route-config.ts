@@ -1,50 +1,9 @@
 import { camelCase, compact, pascalCase } from "es-toolkit";
-import type { ParsedRoute } from "../types/swagger-typescript-api";
-import { pipe } from "./fp.ts";
-import { getDiscriminatorMatcher, isValidType } from "./route-utils.ts";
+import type { RouteConfig } from "../types/route-config.ts";
+import type { ParsedRoute } from "../types/swagger-typescript-api.ts";
+import { pipe } from "../utils/fp.ts";
+import { getDiscriminatorMatcher, isValidType } from "../utils/route-utils.ts";
 
-type RouteConfig = {
-	request: {
-		functionName: string;
-		pathParams: {
-			signatures: string[];
-			arguments: string[];
-		};
-		query: {
-			dtoName: string | null;
-		};
-		headers: {
-			dtoName: string | null;
-		};
-		payload: {
-			dtoName: string | null;
-		};
-		options: {
-			typeExpr: string | null;
-		};
-		parameters: {
-			signatures: {
-				required: string[];
-				all: string[];
-			};
-			arguments: {
-				required: string[];
-				all: string[];
-			};
-		};
-		schema: {
-			list: string[];
-			expression: string | null;
-		};
-	};
-	response: {
-		dtoName: string | null;
-		schema: {
-			list: string[];
-			expression: string | null;
-		};
-	};
-};
 
 export function generateConfig(route: ParsedRoute) {
 	const configMutators = withRoute(route);
