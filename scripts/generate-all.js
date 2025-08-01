@@ -6,6 +6,7 @@ import { pascalCase } from "es-toolkit";
 import minimist from "minimist";
 import { generate } from "ts-to-zod";
 import { writeFileToPath } from "../utils/file.ts";
+import { generateModuleConfig } from "../utils/module-config.ts";
 import { generateConfig } from "../utils/route-config.ts";
 import { buildRequestFunctionName } from "../utils/route-utils.ts";
 import { generateApiCode } from "../utils/swagger-typescript-api.ts";
@@ -171,17 +172,13 @@ const generateApiFunctionCode = async (args, outputPaths) => {
 				};
 			},
 			onCreateRoute: (route) => {
-				const { moduleName } = route.raw;
 				const routeConfig = generateConfig(route);
+				const moduleConfig = generateModuleConfig(route, args.createSchema);
 
 				return {
 					...route,
 					routeConfig,
-					moduleConfig: {
-						apiClassName: `${pascalCase(moduleName)}Api`,
-						apiParametersTypeName: `T${pascalCase(moduleName)}ApiRequestParameters`,
-						createSchema: args.createSchema,
-					},
+					moduleConfig,
 				};
 			},
 		},
@@ -248,14 +245,14 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 				const { routeName } = route;
 				const { moduleName } = route.raw;
 				const routeConfig = generateConfig(route);
+				const moduleConfig = generateModuleConfig(route, args.createSchema);
 				const pascalCaseRouteName = pascalCase(routeName.usage);
 
 				return {
 					...route,
 					routeConfig,
 					moduleConfig: {
-						apiInstanceName: `${moduleName}Api`,
-						apiParametersTypeName: `T${pascalCase(moduleName)}ApiRequestParameters`,
+						...moduleConfig,
 						query: {
 							queryKeyObjectName: `${moduleName.toUpperCase()}_QUERY_KEY`,
 						},
@@ -312,7 +309,7 @@ const generateSchemaCode = async (args, outputPaths) => {
 	const { projectTemplate, uri, username, password } = args;
 	const templatePath = projectTemplate
 		? path.resolve(process.cwd(), projectTemplate)
-		: path.resolve(__dirname, "../templates/schema");
+		: path.resolve(__dirname, "../templates");
 
 	const apiFunctionCode = await generateApiCode({
 		uri,
@@ -340,6 +337,18 @@ const generateSchemaCode = async (args, outputPaths) => {
 			},
 		],
 		schemaParsers: {},
+		hooks: {
+			onCreateRoute: (route) => {
+				const routeConfig = generateConfig(route);
+				const moduleConfig = generateModuleConfig(route, args.createSchema);
+
+				return {
+					...route,
+					routeConfig,
+					moduleConfig,
+				};
+			},
+		},
 	});
 
 	for (const { fileName, fileContent } of apiFunctionCode.files) {

@@ -1,5 +1,5 @@
 import type { ZodSchema } from 'zod';
-import { IS_DEV } from '../constants/env';
+import { IS_LOCAL } from '../constants/env';
 
 export class ZodValidationError extends Error {
   constructor(message: string) {
@@ -25,7 +25,7 @@ export const validateSchema = <TData>(
       `❌ Invalid data according to zod schema:\n${errorMessage}\n\n🔍 Received data: ${JSON.stringify(data, null, 2)}`,
     );
 
-    if (IS_DEV) {
+    if (IS_LOCAL) {
       console.error(error);
     }
 
