@@ -1,3 +1,4 @@
+import path from "node:path";
 import { camelCase, compact } from "es-toolkit";
 import type { RawRouteInfo } from "../types/swagger-typescript-api";
 
@@ -31,3 +32,4 @@ export const getDiscriminatorMatcher = (
 		})
 		.join(".");
 };
+

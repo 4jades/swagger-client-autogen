@@ -9,17 +9,20 @@ const routes = route.routes;
 const dataContracts = _.map(modelTypes, "name");
 
 const moduleConfig = routes.at(0)?.moduleConfig;
-const routeConfig = routes.at(0)?.routeConfig;
-const codegenConfig = moduleConfig.codegenConfig;
+const codegenConfig = routes.at(0)?.codegenConfig;
+
+const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
+  fromPath: codegenConfig.customOutput.pathInfo.api.output.relative
+})
 %>
 
 import type { KyInstance, Options } from 'ky';
 import { type ZodSchema, z } from 'zod';
 import { match } from 'ts-pattern';
 
-<%~ codegenConfig.createSchema && includeFile('./schema-import.ejs', { ...it }) %>
-<%~ includeFile('./dto-import.ejs', { ...it }) %>
-<%~ includeFile('./stream-import.ejs', { ...it }) %>
+<%~ codegenConfig.createSchema && includeFile('./imports/schema-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
+<%~ includeFile('./imports/dto-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
+<%~ includeFile('./imports/stream-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
 import { validateSchema, createSearchParams } from '@/shared/api/utils.gen';
 
 export class <%= moduleConfig.apiClassName %> {
@@ -35,9 +38,9 @@ this.instance = instance;
 }
 
 export type <%= moduleConfig.apiParametersTypeName %> = {
-<% for (const route of routes) { %>
-  <%= route.routeConfig.request.functionName %>: {
-    <%~ route.routeConfig.request.parameters.signatures.all.join(", ") %>
+<% for (const {routeConfig: {request: {functionName, parameters}}} of routes) { %>
+  <%= functionName %>: {
+    <%~ parameters.signatures.all.join(", ") %>
   },
 <% } %>
 }

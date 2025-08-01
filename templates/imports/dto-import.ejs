@@ -4,9 +4,12 @@
 * 코드 생성 후에 import 구문 중복 제거가 동작하기 때문에 모든 dto를 import합니다.
 */
 
-const { utils, route, modelTypes } = it;
+const { utils, route, modelTypes, codegenConfig, resolveRelativeImportPath } = it;
 const { _, pascalCase } = utils;
 const routes = route.routes;
+
+const { pathInfo } = codegenConfig.customOutput;
+const dtoAlias = resolveRelativeImportPath(pathInfo.dto.alias)
 
 const dataContracts = _.map(modelTypes, "name");
 const queryParamsDto = routes.filter(v=>v.specificArgs.query).map(v=>`${pascalCase(v.routeName.original)}QueryParams`)
@@ -15,6 +18,4 @@ const headerDto = routes.filter(v=>v.specificArgs.headers).map(v=>`${pascalCase(
 const dtoArray = [...queryParamsDto, ...dataContracts, ...headerDto]
 %>
 
-<% if (dtoArray.length) { %>
-import type { <%~ dtoArray.join(", ") %> } from "@/shared/api/dto";
-<% } %>
+<%~ dtoArray.length > 0 ? `import type { ${dtoArray.join(", ")} } from "${dtoAlias}";` : "" %>

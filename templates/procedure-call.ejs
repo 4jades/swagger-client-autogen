@@ -9,7 +9,7 @@ const routeDocs = includeFile("./route-docs", { config, route, utils });
 
 const moduleConfig = route.moduleConfig;
 const routeConfig = route.routeConfig;
-const codegenConfig = moduleConfig.codegenConfig;
+const codegenConfig = route.codegenConfig;
 
 const {request, response} = routeConfig;
 

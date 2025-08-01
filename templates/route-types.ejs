@@ -8,11 +8,20 @@ const { _, pascalCase, require } = utils;
 const apiClassName = pascalCase(route.moduleName);
 const routes = route.routes;
 const dataContracts = _.map(modelTypes, "name");
+
+const moduleConfig = routes.at(0)?.moduleConfig;
+const codegenConfig = routes.at(0)?.codegenConfig;
+
+const { pathInfo } = codegenConfig.customOutput;
+const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
+  fromPath: pathInfo.apiInstance.output.relative
+})
 %>
 
 import { kyInstance } from "@/shared/api/instance"
 
-import { <%= apiClassName %>Api } from './index'
+<%~ includeFile('./imports/api-class.ejs', { ...it, moduleConfig, codegenConfig, resolveRelativeImportPath }) %>
+
 
 const <%= route.moduleName %>Api = new <%= apiClassName %>Api(kyInstance);
 

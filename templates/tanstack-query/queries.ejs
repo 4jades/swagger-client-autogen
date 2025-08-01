@@ -9,6 +9,12 @@ const { moduleName, routes } = route;
 
 const queryRoutes = routes.filter(({ request: { method } }) => method === 'get');
 const moduleConfig = routes.at(0)?.moduleConfig;
+const codegenConfig = routes.at(0)?.codegenConfig;
+
+const { pathInfo } = codegenConfig.customOutput;
+const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
+  fromPath: pathInfo.query.output.relative
+})
 %>
 
 <% if (queryRoutes?.length) { %>
@@ -16,10 +22,10 @@ import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import type { DefaultError, UseQueryOptions, UseSuspenseQueryOptions } from '@tanstack/react-query';
 import type { KyInstance, Options } from 'ky';
 
-<%~ includeFile('../dto-import.ejs', { ...it }) %>
+<%~ includeFile('../imports/dto-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
 
-import type { <%~ moduleConfig.apiParametersTypeName %> } from './index';
-import { <%~ moduleConfig.apiInstanceName %> } from './instance';
+<%~ includeFile('../imports/api-class.ejs', { ...it, moduleConfig, codegenConfig, resolveRelativeImportPath }) %>
+<%~ includeFile('../imports/api-instance.ejs', { ...it, moduleConfig, codegenConfig, resolveRelativeImportPath }) %>
 
 
 export const <% ~moduleConfig.query.queryKeyObjectName %> = {

@@ -52,43 +52,6 @@ const printUsage = () => {
 	);
 	console.error("Usage: node generate-all.js [--config <config-file-path>]");
 	console.error("Default config file: swagger-client-autogen.config.ts");
-	console.error("");
-	console.error("Example config file (swagger-client-autogen.config.ts):");
-	console.error(`
-export default {
-  uri: "https://api.example.com/swagger.json",
-  username: "user",
-  password: "pass",
-  createSchema: true,
-  outputMap: {
-    dto: {
-      output: "src/shared/api/dto.ts",
-      alias: "@/shared/api/dto.ts"
-    },
-    api: {
-      output: "src/entities/{moduleName}/api/index.ts",
-      alias: "@/entities/{moduleName}/api/index.ts"
-    },
-    apiInstance: {
-      output: "src/entities/{moduleName}/api/instance.ts",
-      alias: "@/entities/{moduleName}/api/instance.ts"
-    },
-    query: {
-      output: "src/entities/{moduleName}/api/queries.ts",
-      alias: "@/entities/{moduleName}/api/queries.ts"
-    },
-    mutation: {
-      output: "src/entities/{moduleName}/api/mutations.ts",
-      alias: "@/entities/{moduleName}/api/mutations.ts"
-    },
-    schema: {
-      output: "src/shared/api/schema.gen.ts",
-      alias: "@/shared/api/schema.gen.ts"
-    },
-  },
-  projectTemplate: "./templates",
-};
-`);
 };
 
 
@@ -118,6 +81,7 @@ const generateApiFunctionCode = async (config) => {
 					...route,
 					routeConfig,
 					moduleConfig,
+					codegenConfig: config,
 				};
 			},
 		},
@@ -126,22 +90,21 @@ const generateApiFunctionCode = async (config) => {
 	for (const { fileName, fileContent } of apiFunctionCode.files) {
 		if (fileName === "http-client") continue;
 
+		const { pathInfo } = config.customOutput;
+
 		if (fileName === "data-contracts") {
-			await writeFileToPath(config.outputMap.dto.output, fileContent);
+			await writeFileToPath(pathInfo.dto.output.absolute, fileContent);
 		} else {
 			const moduleName = fileName.replace("Route", "").toLowerCase();
 
 			if (fileName.match(/Route$/)) {
-				const output = config.outputMap.apiInstance.output.replace(
+				const output = pathInfo.apiInstance.output.absolute.replace(
 					"{moduleName}",
 					moduleName,
 				);
 				await writeFileToPath(output, fileContent);
 			} else {
-				const output = config.outputMap.api.output.replace(
-					"{moduleName}",
-					moduleName,
-				);
+				const output = pathInfo.api.output.absolute.replace("{moduleName}", moduleName);
 				await writeFileToPath(output, fileContent);
 			}
 		}
@@ -184,12 +147,13 @@ const generateTanstackQueryCode = async (config) => {
 				const { routeName } = route;
 				const { moduleName } = route.raw;
 				const routeConfig = generateConfig(route);
-				const moduleConfig = generateModuleConfig(route, config.createSchema);
+				const moduleConfig = generateModuleConfig(route, config);
 				const pascalCaseRouteName = pascalCase(routeName.usage);
 
 				return {
 					...route,
 					routeConfig,
+					codegenConfig: config,
 					moduleConfig: {
 						...moduleConfig,
 						query: {
@@ -222,6 +186,8 @@ const generateTanstackQueryCode = async (config) => {
 	for (const { fileName, fileContent } of tanstackQueryCode.files) {
 		if (fileName === "http-client" || fileName === "data-contracts") continue;
 
+		const { pathInfo } = config.customOutput;
+
 		/**
 		 * @description: 파일명이 고정돼서 생성되기 때문에 수동으로 변환함
 		 * @see: https://github.com/acacode/swagger-typescript-api/blob/a9cb2f8388083330d7f28871788885cc9de145d3/src/code-gen-process.ts#L418
@@ -229,13 +195,13 @@ const generateTanstackQueryCode = async (config) => {
 		const moduleName = fileName.replace("Route", "").toLowerCase();
 
 		if (fileName.match(/Route$/)) {
-			const output = config.outputMap.mutation.output.replace(
+			const output = pathInfo.mutation.output.absolute.replace(
 				"{moduleName}",
 				moduleName,
 			);
 			await writeFileToPath(output, fileContent);
 		} else {
-			const output = config.outputMap.query.output.replace(
+			const output = pathInfo.query.output.absolute.replace(
 				"{moduleName}",
 				moduleName,
 			);
@@ -285,6 +251,7 @@ const generateSchemaCode = async (config) => {
 					...route,
 					routeConfig,
 					moduleConfig,
+					codegenConfig: config,
 				};
 			},
 		},
@@ -293,10 +260,12 @@ const generateSchemaCode = async (config) => {
 	for (const { fileName, fileContent } of apiFunctionCode.files) {
 		if (fileName === "http-client") continue;
 
+		const { pathInfo } = config.customOutput;
+
 		if (fileName === "data-contracts") {
 			const schema = generate({ sourceText: fileContent });
 			await writeFileToPath(
-				path.resolve(process.cwd(), config.outputMap.schema.output),
+				path.resolve(process.cwd(), pathInfo.schema.output.absolute),
 				schema
 					.getZodSchemasFile()
 					.replaceAll("datetime()", "datetime({ offset: true })"),
@@ -329,7 +298,7 @@ const main = async () => {
 	}
 
 	try {
-		config.createSchema && (await generateSchemaCode(config));
+		// config.createSchema && (await generateSchemaCode(config));
 		await generateApiFunctionCode(config);
 		await generateTanstackQueryCode(config);
 	} catch (e) {
