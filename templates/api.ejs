@@ -1,40 +1,42 @@
 <%
+/** 
+* @description API 클래스 생성 템플릿 입니다.
+*/
+
 const { utils, route, config, modelTypes } = it;
 const { _, pascalCase, require } = utils;
-const apiClassName = pascalCase(route.moduleName);
 const routes = route.routes;
 const dataContracts = _.map(modelTypes, "name");
+
+const moduleConfig = routes.at(0)?.moduleConfig;
+const routeConfig = routes.at(0)?.routeConfig;
 %>
 
-import { KyInstance, Options } from 'ky';
+import type { KyInstance, Options } from 'ky';
+import { type ZodSchema, z } from 'zod';
+import { match } from 'ts-pattern';
 
+<%~ includeFile('./schema-import.ejs', { ...it }) %>
 <%~ includeFile('./dto-import.ejs', { ...it }) %>
+<%~ includeFile('./stream-import.ejs', { ...it }) %>
+import { validateSchema, createSearchParams } from '@/shared/api/utils.gen';
 
-export class <%= apiClassName %>Api {
+export class <%= moduleConfig.apiClassName %> {
 private readonly instance: KyInstance;
 
 constructor(instance: KyInstance) {
 this.instance = instance;
 }
 
-static createSearchParams(
-  params?: Record<string, string | number | boolean | Array<string | number | boolean>>
-): URLSearchParams {
-  const urlSearchParams = new URLSearchParams();
-
-  if (params) {
-    Object.entries(params)
-      .filter(([, value]) => value !== undefined)
-      .forEach(([key, value]) => {
-        const values = Array.isArray(value) ? value : [value];
-        values.forEach((v) => urlSearchParams.append(key, v.toString()));
-      });
-  }
-
-  return urlSearchParams;
+<% for (const route of routes) { %>
+<%~ includeFile('./procedure-call.ejs', { ...it, route,  }) %>
+<% } %>
 }
 
+export type <%= moduleConfig.apiParametersTypeName %> = {
 <% for (const route of routes) { %>
-<%~ includeFile('./procedure-call.ejs', { ...it, route, apiClassName }) %>
+  <%= route.routeConfig.request.functionName %>: {
+    <%~ route.routeConfig.request.parameters.signatures.all.join(", ") %>
+  },
 <% } %>
 }

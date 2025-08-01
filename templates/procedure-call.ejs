@@ -1,62 +1,57 @@
 <%
-const { utils, route, config, apiClassName } = it;
+/** 
+* @description api 호출 함수 생성 템플릿 입니다. api.ejs에서 호출합니다.
+*/
+
+const { utils, route, config } = it;
 const { _, pascalCase } = utils;
 const routeDocs = includeFile("./route-docs", { config, route, utils });
 
-const functionName = route.request.method + pascalCase(`${route.request.path
-        .split('/')
-        .map((segment) =>
-                segment.includes('${') ? `By_${segment.replace(/[${}]/g, '')}` : segment
-        )
-        .join('_')}`);
+const moduleConfig = route.moduleConfig;
+const routeConfig = route.routeConfig;
 
-const responseType = route.responseBodyInfo?.success?.type || 'any';
-const pathParams = _.values(route.request.parameters);
-const hasPathParams = pathParams.length > 0;
+const {request, response} = routeConfig;
+
+const method = route.request.method;
 const payload = route.request.payload;
 const query = route.request.query;
-const headers = route.request.headers;
-const headerName = headers ? `${pascalCase(route.routeName.usage)}Headers` : null;
+/**
+ * Http 요청에 대한 스트림 응답 여부 (eventSource 를 사용하는 sse 요청은 포함 안됨.)
+ */
+const isStreamResponse = route.request.contentTypes?.includes('application/json') && route.response.contentTypes?.includes('text/event-stream');
+const apiName = `${pascalCase(routeConfig.request.functionName.replace(method, ''))}`
+const streamConfig = {
+    handlerName: isStreamResponse ? `${apiName}StreamHandler` : null,
+    callback: {
+        arguments: isStreamResponse ? 'callbacks' : null,
+        typeExr: isStreamResponse ? `{callbacks: ${apiName}StreamCallbacks}` : null,
+    }
+}
 
-const queryTypeName = query ? `${pascalCase(route.routeName.usage)}QueryParams` : null;
-
-const generateParams = (params, query, payload, headerName) => {
-    const paramList = [
-        ...(params ? params.map(param => `${param.name}${param.optional ? '?' : ''}: ${param.type}`) : []),
-        ...(query ? [`params${query.optional ? '?' : ''}: ${queryTypeName || query.type}`] : []),
-        ...(payload ? [`data${payload.optional ? '?' : ''}: ${payload.type}`] : [])
-    ];
-
-    const omitTypes = [
-        ...(query ? ["'searchParams'"] : []),
-        ...(payload ? ["'json'"] : []),
-        ...(headerName ? ["'headers'"] : [])
-    ];
-
-    const optionsType = omitTypes.length > 0
-            ? `Omit<Options, ${omitTypes.join(' | ')}>${headerName ? ` & { headers: ${headerName} }` : ''}`
-            : 'Options';
-
-    paramList.push('kyInstance?: KyInstance', `options?: ${optionsType}`);
-    return paramList.join(', ');
-};
+const requestFunctionArgumentsCode = [...request.parameters.arguments.all, streamConfig.callback.arguments].filter(Boolean).join(", ");
+const requestFunctionArgumentsTypeCode = [`${moduleConfig.apiParametersTypeName}["${request.functionName}"]`, streamConfig.callback.typeExr].filter(Boolean).join(" & ");
 %>
 
 /**
-<%~ routeDocs.lines %> */
-<%= functionName %>(<%~ generateParams(pathParams, query, payload, headerName) %>) {
-const instance = kyInstance ?? this.instance;
-<% if (query) { %>
-    const urlSearchParams = <%= apiClassName %>Api.createSearchParams(params);
-<% } %>
+<%~ _.compact([routeDocs.lines, routeDocs.streamDescription]).join('\n') %>
 
-return instance.<%= route.request.method.toLowerCase() %><<%= responseType %>>(`<%= route.request.path.replace(/{/g, '{').replace(/}/g, '}').slice(1,) %>`,{
-<% if (query) { %>
-    searchParams: urlSearchParams,
-<% } %>
-<% if (payload) { %>
-    json: data,
-<% } %>
-...options,
-}).json();
+*/
+async <%~ request.functionName %>({<%~ requestFunctionArgumentsCode %>}: <%~ requestFunctionArgumentsTypeCode %>) {
+    <%~ request.schema.expression ? `validateSchema(${request.schema.expression}, payload);` : null %>
+
+    const instance = kyInstance ?? this.instance;
+    <%~ query ? `const urlSearchParams = createSearchParams(params);` : null %>
+
+    const response = await instance.<%~ method %><<%~ response.dtoName %>>(`<%~ route.request.path.slice(1,) %>`,{
+        <%~ [
+            query ? 'searchParams: urlSearchParams,' : null,
+            payload ? 'json: payload,' : null,
+             '...options,'
+        ].filter(Boolean).join("\n") %>
+    })<%~ !isStreamResponse ? '.json()' : '' %>;
+
+    <%~ response.schema.expression ? `validateSchema(${response.schema.expression}, response);` : null %>
+
+    return <%~ isStreamResponse ? `new ${streamConfig.handlerName}(response, callbacks);` : 'response' %>;
 }
+

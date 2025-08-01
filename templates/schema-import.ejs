@@ -1,0 +1,12 @@
+<%
+/** 
+* @description Schema import 구문 생성 템플릿 입니다. api.ejs에서 호출합니다.
+*/
+
+const { utils, route, config, modelTypes } = it;
+const routes = route.routes;
+
+const allSchemaList = [...routes.map(({routeConfig}) => [...routeConfig.request.schema.list, ...routeConfig.response.schema.list]).flat()].join(',');
+%>
+
+<%~ allSchemaList.length > 0 ? `import { ${allSchemaList} } from '@/shared/api/schema.gen';` : '' %>

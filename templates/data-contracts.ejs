@@ -1,4 +1,8 @@
 <%
+/** 
+* @description Dto 생성 템플릿 입니다.
+*/
+
 const { modelTypes, utils, config, routes } = it;
 const { formatDescription, require, _, Ts, pascalCase } = utils;
 
@@ -27,6 +31,8 @@ const dataContractTemplates = {
 }
 %>
 
+import { File } from 'buffer'
+
 <% if (config.internalTemplateOptions.addUtilRequiredKeysType) { %>
 type <%~ config.Ts.CodeGenKeyword.UtilRequiredKeys %><T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>
 <% } %>
@@ -44,7 +50,7 @@ type <%~ config.Ts.CodeGenKeyword.UtilRequiredKeys %><T, K extends keyof T> = Om
         <% const queryName = `${pascalCase(api.routeName.usage)}QueryParams`; %>
         <% const queryContent = api.specificArgs.query?.type; %>
         <% if (queryContent) { %>
-            export type <%= queryName %> = <%= queryContent %>;
+            export type <%~ queryName %> = <%~ queryContent %>;
         <% } %>
 
         <% const headerName = `${pascalCase(api.routeName.usage)}Headers`; %>

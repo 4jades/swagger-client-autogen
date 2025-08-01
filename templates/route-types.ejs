@@ -1,4 +1,8 @@
 <%
+/** 
+* @description 모듈별(entity) api 인스턴스 생성 템플릿 입니다.
+*/
+
 const { utils, route, config, modelTypes } = it;
 const { _, pascalCase, require } = utils;
 const apiClassName = pascalCase(route.moduleName);
@@ -6,7 +10,7 @@ const routes = route.routes;
 const dataContracts = _.map(modelTypes, "name");
 %>
 
-import { kyInstance } from "@/shared/api"
+import { kyInstance } from "@/shared/api/instance"
 
 import { <%= apiClassName %>Api } from './index'
 

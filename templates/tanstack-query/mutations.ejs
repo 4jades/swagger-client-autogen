@@ -1,0 +1,67 @@
+<%
+/** 
+* @description Tanstack Query - Mutation 생성 템플릿 입니다.
+*/
+
+const { utils, route, modelTypes, config } = it;
+const { pascalCase } = utils;
+const { moduleName, routes } = route;
+
+const mutationRoutes = routes
+    .filter(({ request: { method } }) => ['post','patch','put','delete'].includes(method))
+    .filter(({ response }) => !response.contentTypes?.includes('text/event-stream'));
+const commonMeta = mutationRoutes.at(0)?.customeMeta;
+const moduleConfig = routes.at(0)?.moduleConfig;
+%>
+
+<% if (mutationRoutes?.length) { %>
+
+import type {DefaultError, UseMutationOptions, useQueryClient} from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
+import type { KyInstance, Options } from 'ky';
+
+<%~ includeFile('../dto-import.ejs', { ...it }) %>
+
+import type { <%~ moduleConfig.apiParametersTypeName %> } from './index';
+import { <%= moduleConfig.apiInstanceName %> } from './instance';
+
+export const <% ~moduleConfig.mutation.mutationKeyObjectName %> = {
+<% for (const {hookConfig: {mutation}} of mutationRoutes) { %>
+    <% ~mutation.mutationKeyConstanstName %>: <% ~mutation.mutationKeyConstanstContent %>,
+<% } %>
+};
+
+const mutations = {
+<% for (const {customeMeta, routeConfig, hookConfig: {mutation}} of mutationRoutes) { %>
+    <%= routeConfig.request.functionName %>: () => ({
+        mutationFn:({ <%= routeConfig.request.parameters.arguments.all.join(", ") %> }: <%= moduleConfig.apiParametersTypeName %>["<%= routeConfig.request.functionName %>"]) => {
+            return <%= moduleConfig.apiInstanceName %>.<%= routeConfig.request.functionName %>({<%= routeConfig.request.parameters.arguments.all.join(", ") %>});
+        },
+        mutationKey: <% ~moduleConfig.mutation.mutationKeyObjectName %>.<% ~mutation.mutationKeyConstanstName %>,
+    }),
+<% } %>
+};
+
+export { mutations as <%~ moduleName %>Mutations };
+
+<% for (const route of mutationRoutes) {
+    const routeDocs = includeFile("../route-docs.ejs", { config, route, utils });
+    const mutation = route.hookConfig.mutation;
+    const routeConfig = route.routeConfig;
+%>
+
+/**
+<%~ routeDocs.lines %>
+
+*/
+export const <%= mutation.mutationHookName %> = (
+    options?: Omit<UseMutationOptions<<%~ routeConfig.response.dtoName %>,DefaultError, <%= moduleConfig.apiParametersTypeName %>["<%= routeConfig.request.functionName %>"]>,'mutationFn'|'mutationKey' >
+) => {
+    return useMutation({
+        ...mutations.<%= routeConfig.request.functionName %>(),
+        ...options,
+    });
+};
+
+<% } %>
+<% } %>

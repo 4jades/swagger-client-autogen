@@ -1,0 +1,58 @@
+<%
+/** 
+* @description Type Guard 생성 템플릿 입니다.
+*/
+
+const { modelTypes, utils, config, routes } = it;
+const { pascalCase, internalCase: camelCase } = utils;
+
+const contractList = modelTypes
+    .filter((contract) => contract.name !== 'HTTPValidationErrorDto')
+    .map((contract) => {
+    return {
+        functionName: camelCase(`is${contract.name}`),
+        dtoName: contract.name,
+        schemaName: camelCase(`${contract.name}Schema`)
+    }
+})
+
+const parameterDtoList = routes.combined.map((route) => {
+    return route.routes.reduce((acc, api) => {
+      const isQueryConentExsist = Boolean(api.specificArgs.query?.type);
+      const isHeaderConentExsist = Boolean(api.specificArgs.headers?.type);
+
+      const queryName = `${pascalCase(api.routeName.usage)}QueryParams`;
+      const headerName = `${pascalCase(api.routeName.usage)}Headers`;
+
+      isQueryConentExsist && acc.push({
+        functionName: camelCase(`is${queryName}`),
+        dtoName: queryName,
+        schemaName: camelCase(`${queryName}Schema`)
+      })
+      isHeaderConentExsist && acc.push({
+        functionName: camelCase(`is${headerName}`),
+        dtoName: headerName,
+        schemaName: camelCase(`${headerName}Schema`)
+      })
+
+      return acc;
+    }, [])
+}).flat();
+
+const allDtoList = [...contractList, ...parameterDtoList];
+%>
+
+import type { <%~ allDtoList.map((dto) => dto.dtoName).join(', ') %> } from './dto';
+import { <%~ allDtoList.map((dto) => dto.schemaName).join(', ') %> } from './schema.gen';
+
+
+<% for (const parameterDto of allDtoList) { %>
+export const <%~ parameterDto.functionName %> = (
+  data: unknown,
+): data is <%~ parameterDto.dtoName %> => {
+  return <%~ parameterDto.schemaName %>.safeParse(data).success;
+};
+
+
+<% } %>
+

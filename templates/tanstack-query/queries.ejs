@@ -1,0 +1,87 @@
+<%
+/** 
+* @description Tanstack Query - Query 생성 템플릿 입니다.
+*/
+
+const { utils, route, modelTypes, config } = it;
+
+const { moduleName, routes } = route;
+
+const queryRoutes = routes.filter(({ request: { method } }) => method === 'get').map(route=>({
+    ...route,
+}))
+const moduleConfig = routes.at(0)?.moduleConfig;
+%>
+
+<% if (queryRoutes?.length) { %>
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import type { DefaultError, UseQueryOptions, UseSuspenseQueryOptions } from '@tanstack/react-query';
+import type { KyInstance, Options } from 'ky';
+
+<%~ includeFile('../dto-import.ejs', { ...it }) %>
+
+import type { <%~ moduleConfig.apiParametersTypeName %> } from './index';
+import { <%~ moduleConfig.apiInstanceName %> } from './instance';
+
+
+export const <% ~moduleConfig.query.queryKeyObjectName %> = {
+<% for (const {queryMeta, hookConfig: {query}} of queryRoutes) { %>
+<% ~query.queryKeyConstanstName %>: <% ~query.queryKeyConstanstFunction %>,
+<% } %>
+}
+
+const queries = {
+<% for (const {queryMeta, routeConfig, hookConfig: {query}} of queryRoutes) { %>
+<% ~routeConfig.request.functionName %>: ({ <%~ routeConfig.request.parameters.arguments.all.join(", ") %> }: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]) => ({
+    queryKey: <%~ moduleConfig.query.queryKeyObjectName %>.<% ~query.queryKeyConstanstName %>(<% ~query.queryKeyArgs %>),
+    queryFn: () => <% ~moduleConfig.apiInstanceName %>.<% ~routeConfig.request.functionName %>({<% ~routeConfig.request.parameters.arguments.all.join(", ") %>})
+}),
+<% } %>
+}
+
+export { queries as <%~ moduleName %>Queries };
+
+// ---------------------- Query ------------------------------
+<% for (const route of queryRoutes) {
+    const routeDocs = includeFile("../route-docs.ejs", { config, route: route, utils });
+    const query = route.hookConfig.query;
+    const routeConfig = route.routeConfig;
+%>
+/**
+<%~ routeDocs.lines %>
+*
+*/
+export const <%~ query.queryHookName %> = <TData=<%~ routeConfig.response.dtoName %>>(
+    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"],
+    options?: Omit<UseQueryOptions<<%~ routeConfig.response.dtoName %>,DefaultError, TData>,'queryKey' | 'queryFn' >
+) => {
+    return useQuery({
+        ...queries.<% ~routeConfig.request.functionName %>(requestArgs),
+        ...options,
+    })
+}
+
+<% } %>
+
+// ------------------ Suspense Query --------------------------
+<% for (const route of queryRoutes) {
+    const routeDocs = includeFile("../route-docs.ejs", { config, route: route, utils });
+    const query = route.hookConfig.query;
+    const routeConfig = route.routeConfig;
+%>
+/**
+<%~ routeDocs.lines %>
+*
+*/
+export const <%~ query.suspenseQueryHookName %> = <TData=<%~ routeConfig.response.dtoName %>>(
+    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"],
+    options?: Omit<UseQueryOptions<<%~ routeConfig.response.dtoName %>,DefaultError, TData>, 'queryKey' | 'queryFn' >
+) => {
+    return useSuspenseQuery({
+        ...queries.<% ~routeConfig.request.functionName %>(requestArgs),
+        ...options,
+    })
+}
+
+    <% } %>
+<% } %>

@@ -8,7 +8,9 @@ export class ZodValidationError extends Error {
   }
 }
 
-export const validateSchema = (schema: ZodSchema, data: unknown) => {
+export const validateSchema = (schema: ZodSchema | null, data: unknown) => {
+  if (!schema) return data;
+
   const result = schema.safeParse(data);
 
   if (!result.success) {
@@ -28,4 +30,24 @@ export const validateSchema = (schema: ZodSchema, data: unknown) => {
   }
 
   return data;
+};
+
+export const createSearchParams = (
+  params?: Record<
+    string,
+    string | number | boolean | Array<string | number | boolean>
+  >,
+): URLSearchParams => {
+  const urlSearchParams = new URLSearchParams();
+
+  if (params) {
+    Object.entries(params)
+      .filter(([, value]) => value !== undefined)
+      .forEach(([key, value]) => {
+        const values = Array.isArray(value) ? value : [value];
+        values.forEach((v) => urlSearchParams.append(key, v.toString()));
+      });
+  }
+
+  return urlSearchParams;
 };
