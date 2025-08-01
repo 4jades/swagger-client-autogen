@@ -66,6 +66,20 @@ const generateApiFunctionCode = async (config) => {
 		username,
 		password,
 		templates: templatePath,
+		templateInfos: [
+			{ name: "api", fileName: "api" },
+			{ name: "routeTypes", fileName: "api-instance" },
+			/**
+			 * @description: 아래 값들은 사용되지 않지만, 모든 templateInfos 값을 넣어야 하기 때문에 기본값으로 추가함
+			 */
+			{ name: "dataContractJsDoc", fileName: "data-contract-jsdoc" },
+			{ name: "interfaceDataContract", fileName: "interface-data-contract" },
+			{ name: "typeDataContract", fileName: "type-data-contract" },
+			{ name: "enumDataContract", fileName: "enum-data-contract" },
+			{ name: "objectFieldJsDoc", fileName: "object-field-jsdoc" },
+			{ name: "httpClient", fileName: "http-client" },
+			{ name: "routeName", fileName: "route-name" },
+		],
 		hooks: {
 			onCreateRouteName: (routeNameInfo, rawRouteInfo) => {
 				return {
@@ -195,13 +209,13 @@ const generateTanstackQueryCode = async (config) => {
 		const moduleName = fileName.replace("Route", "").toLowerCase();
 
 		if (fileName.match(/Route$/)) {
-			const output = pathInfo.mutation.output.absolute.replace(
+			const output = pathInfo.mutations.output.absolute.replace(
 				"{moduleName}",
 				moduleName,
 			);
 			await writeFileToPath(output, fileContent);
 		} else {
-			const output = pathInfo.query.output.absolute.replace(
+			const output = pathInfo.queries.output.absolute.replace(
 				"{moduleName}",
 				moduleName,
 			);
@@ -298,7 +312,7 @@ const main = async () => {
 	}
 
 	try {
-		// config.createSchema && (await generateSchemaCode(config));
+		config.createSchema && (await generateSchemaCode(config));
 		await generateApiFunctionCode(config);
 		await generateTanstackQueryCode(config);
 	} catch (e) {

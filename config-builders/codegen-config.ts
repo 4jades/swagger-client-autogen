@@ -46,25 +46,25 @@ export const setupCodegenConfig = (config: InputCodegenConfig): CodegenConfig =>
 					},
 					alias: "@/entities/{moduleName}/api/instance",
 				},
-				query: {
+				queries: {
 					output: {
 						relative:
-							config.customOutput?.pathInfo?.query?.output ??
+							config.customOutput?.pathInfo?.queries?.output ??
 							"src/entities/{moduleName}/api/queries.ts",
 						absolute: getAbsoluteFilePath(
-							config.customOutput?.pathInfo?.query?.output ??
+							config.customOutput?.pathInfo?.queries?.output ??
 								"src/entities/{moduleName}/api/queries.ts",
 						),
 					},
 					alias: "@/entities/{moduleName}/api/queries",
 				},
-				mutation: {
+				mutations: {
 					output: {
 						relative:
-							config.customOutput?.pathInfo?.mutation?.output ??
+							config.customOutput?.pathInfo?.mutations?.output ??
 							"src/entities/{moduleName}/api/mutations.ts",
 						absolute: getAbsoluteFilePath(
-							config.customOutput?.pathInfo?.mutation?.output ??
+							config.customOutput?.pathInfo?.mutations?.output ??
 								"src/entities/{moduleName}/api/mutations.ts",
 						),
 					},

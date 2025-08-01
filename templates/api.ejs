@@ -33,7 +33,7 @@ this.instance = instance;
 }
 
 <% for (const route of routes) { %>
-<%~ includeFile('./procedure-call.ejs', { ...it, route,  }) %>
+<%~ includeFile('./api-request-function.ejs', { ...it, route,  }) %>
 <% } %>
 }
 

@@ -16,7 +16,7 @@ const codegenConfig = routes.at(0)?.codegenConfig;
 
 const { pathInfo } = codegenConfig.customOutput;
 const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
-  fromPath: pathInfo.query.output.relative
+  fromPath: pathInfo.mutations.output.relative
 })
 %>
 
