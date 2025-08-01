@@ -184,12 +184,10 @@ export const generateApiCode = async ({
 };
 
 const generateApiFunctionCode = async (args, outputPaths) => {
-	const { projectTemplate, createSchema, uri, username, password } = args;
+	const { projectTemplate, uri, username, password } = args;
 	const templatePath = projectTemplate
 		? path.resolve(process.cwd(), projectTemplate)
-		: createSchema
-			? path.resolve(__dirname, "../templates/schema")
-			: path.resolve(__dirname, "../templates");
+		: path.resolve(__dirname, "../templates");
 
 	const apiFunctionCode = await generateApiCode({
 		uri,
@@ -279,52 +277,6 @@ const generateTanstackQueryCode = async (args, outputPaths) => {
 				const routeConfig = generateConfig(route);
 				const pascalCaseRouteName = pascalCase(routeName.usage);
 
-				// const saveRoute = async (route) => {
-				// 	await writeFileToPath(
-				// 		`/Users/user/WebstormProjects/swagger-client-autogen/${routeName.usage}.json`,
-				// 		JSON.stringify(
-				// 			route,
-				// 			(() => {
-				// 				const seen = new WeakSet();
-				// 				return (key, value) => {
-				// 					if (typeof value === "object" && value !== null) {
-				// 						if (seen.has(value)) {
-				// 							return "[Circular]";
-				// 						}
-				// 						seen.add(value);
-				// 					}
-				// 					return value;
-				// 				};
-				// 			})(),
-				// 			2,
-				// 		),
-				// 	);
-				// };
-
-				if (route.raw.operationId === "get_chats_chats_get") {
-					// await saveRoute(route);
-				} else if (
-					route.raw.operationId ===
-					"submit_problem_problems__problem_id__submit_post"
-				) {
-					// console.log(JSON.stringify(routeConfig, null, 2));
-					// await saveRoute(route);
-				} else if (
-					route.raw.operationId === "init_options_chats_init_options_get"
-				) {
-					route.responseBodyInfo;
-					// await saveRoute(route);
-				} else if (
-					route.raw.operationId === "delete_chat_chats__chat_id__delete"
-				) {
-					// await saveRoute(route);
-				} else if (
-					route.raw.operationId === "batch_upload_files_temp_batch_upload_post"
-				) {
-					// console.log(routeConfig);
-					// await saveRoute(route);
-				}
-
 				return {
 					...route,
 					routeConfig,
@@ -399,19 +351,19 @@ const generateSchemaCode = async (args, outputPaths) => {
 				name: "api-utils",
 				path: projectTemplate
 					? path.resolve(process.cwd(), projectTemplate, "api-utils.ejs")
-					: path.resolve(__dirname, "../templates/schema/api-utils.ejs"),
+					: path.resolve(__dirname, "../templates/api-utils.ejs"),
 			},
 			{
 				name: "stream-utils",
 				path: projectTemplate
 					? path.resolve(process.cwd(), projectTemplate, "stream-utils.ejs")
-					: path.resolve(__dirname, "../templates/schema/stream-utils.ejs"),
+					: path.resolve(__dirname, "../templates/stream-utils.ejs"),
 			},
 			{
 				name: "type-guards",
 				path: projectTemplate
 					? path.resolve(process.cwd(), projectTemplate, "type-guards.ejs")
-					: path.resolve(__dirname, "../templates/schema/type-guards.ejs"),
+					: path.resolve(__dirname, "../templates/type-guards.ejs"),
 			},
 		],
 		schemaParsers: {},

@@ -37,21 +37,21 @@ const requestFunctionArgumentsTypeCode = [`${moduleConfig.apiParametersTypeName}
 
 */
 async <%~ request.functionName %>({<%~ requestFunctionArgumentsCode %>}: <%~ requestFunctionArgumentsTypeCode %>) {
-    <%~ request.schema.expression ? `validateSchema(${request.schema.expression}, payload);` : null %>
-
     const instance = kyInstance ?? this.instance;
-    <%~ query ? `const urlSearchParams = createSearchParams(params);` : null %>
+    <%~ request.schema.expression ? `const validatedPayload = validateSchema(${request.schema.expression}, payload);` : '' %>
+
+    <%~ query ? `const urlSearchParams = createSearchParams(params);` : '' %>
 
     const response = await instance.<%~ method %><<%~ response.dtoName %>>(`<%~ route.request.path.slice(1,) %>`,{
         <%~ [
-            query ? 'searchParams: urlSearchParams,' : null,
-            payload ? 'json: payload,' : null,
+            query ? 'searchParams: urlSearchParams,' : '',
+            payload ? 'json: validatedPayload,' : '',
              '...options,'
         ].filter(Boolean).join("\n") %>
     })<%~ !isStreamResponse ? '.json()' : '' %>;
 
-    <%~ response.schema.expression ? `validateSchema(${response.schema.expression}, response);` : null %>
+    <%~ response.schema.expression ? `const validateResponse = validateSchema(${response.schema.expression}, response);` : '' %>
 
-    return <%~ isStreamResponse ? `new ${streamConfig.handlerName}(response, callbacks);` : 'response' %>;
+    return <%~ isStreamResponse ? `new ${streamConfig.handlerName}(response, callbacks);` : response.schema.expression ? `validateResponse` : 'response' %>;
 }
 

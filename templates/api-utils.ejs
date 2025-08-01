@@ -8,7 +8,10 @@ export class ZodValidationError extends Error {
   }
 }
 
-export const validateSchema = (schema: ZodSchema | null, data: unknown) => {
+export const validateSchema = <TData>(
+  schema: ZodSchema | null,
+  data: TData,
+): TData => {
   if (!schema) return data;
 
   const result = schema.safeParse(data);
