@@ -1,4 +1,5 @@
 import { camelCase, compact, findKey, pascalCase } from 'es-toolkit';
+import { produce } from 'immer';
 import { P, match } from 'ts-pattern';
 import type { RouteConfig } from 'types/route-config';
 import type { ParsedRoute } from 'types/swagger-typescript-api';
@@ -76,13 +77,9 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
         return `[${[...pathSegments, queryParamsSegments, payloadSegments].filter(Boolean).join(', ')}]`;
       };
 
-      return {
-        ...config,
-        query: {
-          ...config.query,
-          queryKeyConstanstFunction: `(${routeConfig.request.parameters.signatures.required.join(', ')})=>${buildQueryKeyArray(route)}`,
-        },
-      };
+      return produce(config, draft => {
+        draft.query.queryKeyConstanstFunction = `(${routeConfig.request.parameters.signatures.required.join(', ')})=>${buildQueryKeyArray(route)}`;
+      });
     },
     setStaleTime: (config: TanstackQueryConfig) => {
       const { raw } = route;
@@ -93,13 +90,9 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
 
       const xStaleTime = raw['x-stale-time'] === 'infinity' ? 'Number.POSITIVE_INFINITY' : Number(raw['x-stale-time']);
 
-      return {
-        ...config,
-        query: {
-          ...config.query,
-          staleTime: xStaleTime,
-        },
-      };
+      return produce(config, draft => {
+        draft.query.staleTime = xStaleTime;
+      });
     },
     setGcTime: (config: TanstackQueryConfig) => {
       const { raw } = route;
@@ -110,13 +103,9 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
 
       const xGcTime = raw['x-gc-time'] === 'infinity' ? 'Number.POSITIVE_INFINITY' : Number(raw['x-gc-time']);
 
-      return {
-        ...config,
-        query: {
-          ...config.query,
-          gcTime: xGcTime,
-        },
-      };
+      return produce(config, draft => {
+        draft.query.gcTime = xGcTime;
+      });
     },
     setMutationKeyConstantsContent: (config: TanstackQueryConfig) => {
       const buildMutationKeyConstanstContent = ({ request: { path = '' } }: ParsedRoute) => {
@@ -125,13 +114,9 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
           .join(', ')}]`;
       };
 
-      return {
-        ...config,
-        mutation: {
-          ...config.mutation,
-          mutationKeyConstanstContent: buildMutationKeyConstanstContent(route),
-        },
-      };
+      return produce(config, draft => {
+        draft.mutation.mutationKeyConstanstContent = buildMutationKeyConstanstContent(route);
+      });
     },
     setInvalidateQueryKey: (config: TanstackQueryConfig) => {
       const { raw } = route;
@@ -183,13 +168,9 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
         return `${buildKeyConstantsName({ path, method })}(${newArgs.join(', ')})`;
       });
 
-      return {
-        ...config,
-        mutation: {
-          ...config.mutation,
-          invalidateQueryKey: compact(invalidateQueryKeyCallExpression),
-        },
-      };
+      return produce(config, draft => {
+        draft.mutation.invalidateQueryKey = compact(invalidateQueryKeyCallExpression);
+      });
     },
   };
 }

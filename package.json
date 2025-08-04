@@ -24,6 +24,7 @@
   "packageManager": "yarn@4.7.0",
   "dependencies": {
     "es-toolkit": "^1.39.8",
+    "immer": "^10.1.1",
     "js-yaml": "^4.1.0",
     "minimist": "^1.2.8",
     "node-fetch": "^3.3.2",
