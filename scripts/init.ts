@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env -S npx tsx
 
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -6,7 +6,10 @@ import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import { writeFileToPath } from '../utils/file';
 
-type InitConfig = Pick<import('../types/codegen-config').InputCodegenConfig, 'uri' | 'createSchema' | 'username' | 'password'>;
+type InitConfig = Pick<
+  import('../types/codegen-config').InputCodegenConfig,
+  'uri' | 'createSchema' | 'username' | 'password'
+>;
 
 // 패키지 매니저 감지
 function detectPackageManager(): string {
@@ -25,12 +28,16 @@ const config: InputCodegenConfig = {
   // Swagger 설정
   input: '${config.uri}',
   httpClientType: 'ky',
-  ${config.username ? `
+  ${
+    config.username
+      ? `
   // 인증 정보
   auth: {
     username: '${config.username}',
     password: '${config.password || ''}',
-  },` : ''}
+  },`
+      : ''
+  }
   
   // 스키마 생성 여부
   generateSchema: ${config.createSchema},
@@ -101,7 +108,7 @@ async function main() {
     `${pc.yellow('로컬 파일:')} ./swagger.yml, api/swagger.json
 ${pc.yellow('원격 URL:')} https://api.example.com/swagger.json
 ${pc.yellow('개발 서버:')} http://localhost:3000/api-docs`,
-    '💡 지원하는 입력 형식'
+    '💡 지원하는 입력 형식',
   );
 
   const uri = await p.text({
@@ -200,16 +207,12 @@ ${pc.yellow('개발 서버:')} http://localhost:3000/api-docs`,
     p.note(
       `1. ${pc.green(`${packageManager} run generate-all --config ${configFileName}`)}
 2. 생성된 파일들을 프로젝트에서 사용하세요!`,
-      '🎯 다음 단계'
+      '🎯 다음 단계',
     );
 
-    p.note(
-      'customOutput 설정을 주석 해제하여 파일 경로를 커스터마이징할 수 있습니다.',
-      '💡 팁'
-    );
+    p.note('customOutput 설정을 주석 해제하여 파일 경로를 커스터마이징할 수 있습니다.', '💡 팁');
 
     p.outro('🎉 설정이 완료되었습니다!');
-
   } catch (error) {
     s.stop('❌ 설정 파일 생성 중 오류가 발생했습니다.');
     p.log.error(String(error));
@@ -218,7 +221,7 @@ ${pc.yellow('개발 서버:')} http://localhost:3000/api-docs`,
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((error) => {
+  main().catch(error => {
     p.log.error(`초기화 중 오류가 발생했습니다: ${error}`);
     process.exit(1);
   });

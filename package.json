@@ -4,7 +4,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "yarn tsc && mkdir -p dist/scripts && cp scripts/*.js dist/scripts/",
-    "prepublishOnly": "yarn build"
+    "pre-build": "yarn tsc"
   },
   "keywords": [],
   "author": "",
@@ -12,10 +12,11 @@
   "description": "",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
   "bin": {
-    "fetch-swagger": "./scripts/fetch-swagger.js",
-    "generate-all": "./scripts/generate-all.js",
-    "swagger-client-autogen-init": "./scripts/init.ts"
+    "swagger-autogen": "./scripts/cli.ts"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",

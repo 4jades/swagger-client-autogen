@@ -2469,9 +2469,7 @@ __metadata:
   peerDependencies:
     tsx: ^4.20.3
   bin:
-    fetch-swagger: ./scripts/fetch-swagger.js
-    generate-all: ./scripts/generate-all.js
-    swagger-client-autogen-init: ./scripts/init.ts
+    swagger-autogen: ./scripts/cli.ts
   languageName: unknown
   linkType: soft
 
