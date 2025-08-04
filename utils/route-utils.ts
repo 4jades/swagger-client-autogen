@@ -1,4 +1,3 @@
-import path from "node:path";
 import { camelCase, compact } from "es-toolkit";
 import type { RawRouteInfo } from "../types/swagger-typescript-api";
 
@@ -17,10 +16,11 @@ export const buildRequestFunctionName = (rotue: RawRouteInfo) => {
 	);
 };
 
-export const isValidType = (type) => {
-	const invalidTypes = ["void", "any", "null", "undefined", "object", "string"];
-	const invalidPattern = new RegExp(invalidTypes.join("|"), "i");
-	return type && !invalidPattern.test(type);
+export const isValidType = (type: string | null | undefined): boolean => {
+  if (!type) return false;
+  const invalidTypes = ['void', 'any', 'null', 'undefined', 'object', 'string'];
+  const invalidPattern = new RegExp(invalidTypes.join('|'), 'i');
+  return !invalidPattern.test(type);
 };
 
 export const getDiscriminatorMatcher = (

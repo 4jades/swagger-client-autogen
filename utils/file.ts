@@ -1,7 +1,7 @@
-import path from 'node:path';
 import fs from 'node:fs';
+import path from 'node:path';
 
-export const writeFileToPath = async (filePath, fileContent) => {
+export const writeFileToPath = async (filePath: string, fileContent: string): Promise<void> => {
   const outputDir = path.dirname(filePath);
   try {
     await fs.promises.mkdir(outputDir, { recursive: true });
@@ -12,14 +12,20 @@ export const writeFileToPath = async (filePath, fileContent) => {
   }
 };
 
-export const saveDto = async (outputPath, generateFiles) => {
+export const saveDto = async (
+  outputPath: string,
+  generateFiles: Array<{ fileName: string; fileContent: string }>,
+): Promise<void> => {
   await writeFileToPath(
     outputPath,
-    generateFiles.find(({ fileName }) => fileName === 'data-contracts').fileContent
+    generateFiles.find(({ fileName }: { fileName: string }) => fileName === 'data-contracts')?.fileContent || '',
   );
 };
 
-export const saveEntitiesFile = async (outputPath, generateFiles) => {
+export const saveEntitiesFile = async (
+  outputPath: string,
+  generateFiles: Array<{ fileName: string; fileContent: string }>,
+): Promise<void> => {
   for (const { fileName, fileContent } of generateFiles) {
     if (fileName === 'http-client' || fileName === 'data-contracts') continue;
 
