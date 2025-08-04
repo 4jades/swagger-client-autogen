@@ -12,54 +12,54 @@ export const setupCodegenConfig = (config: InputCodegenConfig): CodegenConfig =>
       pathInfo: {
         dto: {
           output: buildPathOutput('src/shared/api/dto.ts', config.customOutput?.pathInfo?.dto?.output),
-          alias: '@/shared/api/dto',
+          alias: config.customOutput?.pathInfo?.dto?.alias ?? '@/shared/api/dto',
         },
         api: {
           output: buildPathOutput('src/entities/{moduleName}/api/index.ts', config.customOutput?.pathInfo?.api?.output),
-          alias: '@/entities/{moduleName}/api/index',
+          alias: config.customOutput?.pathInfo?.api?.alias ?? '@/entities/{moduleName}/api/index',
         },
         apiInstance: {
           output: buildPathOutput(
             'src/entities/{moduleName}/api/instance.ts',
             config.customOutput?.pathInfo?.apiInstance?.output,
           ),
-          alias: '@/entities/{moduleName}/api/instance',
+          alias: config.customOutput?.pathInfo?.apiInstance?.alias ?? '@/entities/{moduleName}/api/instance',
         },
         queries: {
           output: buildPathOutput(
             'src/entities/{moduleName}/api/queries.ts',
             config.customOutput?.pathInfo?.queries?.output,
           ),
-          alias: '@/entities/{moduleName}/api/queries',
+          alias: config.customOutput?.pathInfo?.queries?.alias ?? '@/entities/{moduleName}/api/queries',
         },
         mutations: {
           output: buildPathOutput(
             'src/entities/{moduleName}/api/mutations.ts',
             config.customOutput?.pathInfo?.mutations?.output,
           ),
-          alias: '@/entities/{moduleName}/api/mutations',
+          alias: config.customOutput?.pathInfo?.mutations?.alias ?? '@/entities/{moduleName}/api/mutations',
         },
         schema: {
           output: buildPathOutput('src/shared/api/schema.gen.ts', config.customOutput?.pathInfo?.schema?.output),
-          alias: '@/shared/api/schema.gen',
+          alias: config.customOutput?.pathInfo?.schema?.alias ?? '@/shared/api/schema.gen',
         },
         apiUtils: {
           output: buildPathOutput('src/shared/api/utils.gen.ts', config.customOutput?.pathInfo?.apiUtils?.output),
-          alias: '@/shared/api/utils.gen',
+          alias: config.customOutput?.pathInfo?.apiUtils?.alias ?? '@/shared/api/utils.gen',
         },
         streamUtils: {
           output: buildPathOutput('src/shared/api/stream.gen.ts', config.customOutput?.pathInfo?.streamUtils?.output),
-          alias: '@/shared/api/stream.gen',
+          alias: config.customOutput?.pathInfo?.streamUtils?.alias ?? '@/shared/api/stream.gen',
         },
         typeGuards: {
           output: buildPathOutput(
             'src/shared/api/type-guards.gen.ts',
             config.customOutput?.pathInfo?.typeGuards?.output,
           ),
-          alias: '@/shared/api/type-guards.gen',
+          alias: config.customOutput?.pathInfo?.typeGuards?.alias ?? '@/shared/api/type-guards.gen',
         },
         streamHandlers: {
-          alias: '@/entities/{moduleName}/api/stream-handlers',
+          alias: config.customOutput?.pathInfo?.streamHandlers?.alias ?? '@/entities/{moduleName}/api/stream-handlers',
         },
       },
     },

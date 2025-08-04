@@ -2,22 +2,15 @@
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { pascalCase } from 'es-toolkit';
 import minimist from 'minimist';
 import { generate } from 'ts-to-zod';
 import { setupCodegenConfig } from '../config-builders/codegen-config.ts';
 import { generateModuleConfig } from '../config-builders/module-config.ts';
 import { generateConfig } from '../config-builders/route-config.ts';
+import { generateTanstackQueryConfig } from '../config-builders/tanstack-query-config.ts';
 import { writeFileToPath } from '../utils/file.ts';
 import { buildRequestFunctionName } from '../utils/route-utils.ts';
 import { generateApiCode } from '../utils/swagger-typescript-api.ts';
-import {
-  buildMutationKeyConstanstContent,
-  buildMutationKeyConstantsName,
-  buildQueryKeyArgs,
-  buildQueryKeyArray,
-  buildQueryKeyConstantsName,
-} from '../utils/tanstack-query-utils.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -152,11 +145,46 @@ const generateTanstackQueryCode = async config => {
         };
       },
       onCreateRoute: route => {
-        const { routeName } = route;
         const { moduleName } = route.raw;
         const routeConfig = generateConfig(route);
         const moduleConfig = generateModuleConfig(route, config);
-        const pascalCaseRouteName = pascalCase(routeName.usage);
+        const tanstackQueryConfig = generateTanstackQueryConfig(route, routeConfig);
+
+        // const saveRoute = async route => {
+        //   await writeFileToPath(
+        //     `/Users/user/WebstormProjects/swagger-client-autogen/${route.routeName.usage}.json`,
+        //     JSON.stringify(
+        //       route,
+        //       (() => {
+        //         const seen = new WeakSet();
+        //         return (key, value) => {
+        //           if (typeof value === 'object' && value !== null) {
+        //             if (seen.has(value)) {
+        //               return '[Circular]';
+        //             }
+        //             seen.add(value);
+        //           }
+        //           return value;
+        //         };
+        //       })(),
+        //       2,
+        //     ),
+        //   );
+        // };
+
+        // if (route.raw.operationId === 'get_chats_chats_get') {
+        //   // await saveRoute(route);
+        // } else if (route.raw.operationId === 'submit_problem_problems__problem_id__submit_post') {
+        //   // await saveRoute(route);
+        // } else if (route.raw.operationId === 'init_options_chats_init_options_get') {
+        //   // await saveRoute(route);
+        // } else if (route.raw.operationId === 'delete_chat_chats__chat_id__delete') {
+        //   await saveRoute(route);
+        // } else if (route.raw.operationId === 'batch_upload_files_temp_batch_upload_post') {
+        //   console.log(routeConfig);
+
+        //   // await saveRoute(route);
+        // }
 
         return {
           ...route,
@@ -171,20 +199,7 @@ const generateTanstackQueryCode = async config => {
               mutationKeyObjectName: `${moduleName.toUpperCase()}_MUTATION_KEY`,
             },
           },
-          hookConfig: {
-            query: {
-              queryKeyArgs: buildQueryKeyArgs(routeConfig),
-              queryKeyConstanstName: buildQueryKeyConstantsName(route),
-              queryKeyConstanstFunction: `(${routeConfig.request.parameters.signatures.required.join(', ')})=>${buildQueryKeyArray(route)}`,
-              queryHookName: `use${pascalCaseRouteName}Query`,
-              suspenseQueryHookName: `use${pascalCaseRouteName}SuspenseQuery`,
-            },
-            mutation: {
-              mutationKeyConstanstName: buildMutationKeyConstantsName(route),
-              mutationKeyConstanstContent: buildMutationKeyConstanstContent(route),
-              mutationHookName: `use${pascalCaseRouteName}Mutation`,
-            },
-          },
+          hookConfig: tanstackQueryConfig,
         };
       },
     },

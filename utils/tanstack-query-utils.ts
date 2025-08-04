@@ -2,20 +2,18 @@ import { compact } from "es-toolkit";
 import type { generateConfig } from "../config-builders/route-config";
 import type { ParsedRoute } from "../types/swagger-typescript-api";
 
-export const buildQueryKeyConstantsName = ({
-	request: { path, method },
-}: ParsedRoute) =>
-	method &&
-	path &&
-	`${method.toUpperCase()}_${path
-		.split("/")
-		.filter((segment) => segment && segment !== "api")
-		.map((segment) =>
-			segment.match(/\${/)
-				? segment.replace(/[${}]/g, "").toUpperCase().replace(/-/g, "_")
-				: segment.toUpperCase().replace(/-/g, "_"),
-		)
-		.join("_")}`;
+export const buildQueryKeyConstantsName = ({ path, method }: Pick<ParsedRoute['request'], 'path' | 'method'>) =>
+  method &&
+  path &&
+  `${method.toUpperCase()}_${path
+    .split('/')
+    .filter(segment => segment)
+    .map(segment =>
+      segment.match(/\$?{/)
+        ? segment.replace(/[${}]/g, '').toUpperCase().replace(/_/g, '')
+        : segment.toUpperCase().replace(/-/g, '_'),
+    )
+    .join('_')}`;
 
 export const buildQueryKeyArray = (route: ParsedRoute) => {
 	const {
@@ -41,7 +39,7 @@ export const buildQueryKeyArray = (route: ParsedRoute) => {
 };
 
 export const buildMutationKeyConstantsName = (route: ParsedRoute) => {
-	return buildQueryKeyConstantsName(route);
+	return buildQueryKeyConstantsName(route.request);
 };
 
 export const buildMutationKeyConstanstContent = ({

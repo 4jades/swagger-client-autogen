@@ -1,0 +1,12 @@
+<%
+/** 
+* @description API Instance import 구문 생성 템플릿 입니다.
+*/
+
+const { moduleConfig, codegenConfig, resolveRelativeImportPath } = it;
+
+const { query } = moduleConfig;
+const { pathInfo } = codegenConfig.customOutput;
+const queriesAlias = resolveRelativeImportPath(pathInfo.queries.alias)
+%>
+import { <%~ query.queryKeyObjectName %> } from '<%~ queriesAlias %>';
