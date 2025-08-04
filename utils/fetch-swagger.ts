@@ -1,3 +1,5 @@
+import { log } from './log';
+
 export const fetchSwagger = async (url: string, username: string, password: string): Promise<any> => {
   const credentials = btoa(`${username}:${password}`);
 
@@ -10,13 +12,13 @@ export const fetchSwagger = async (url: string, username: string, password: stri
     });
 
     if (!response.ok) {
-      console.error('failed with status code', response.status);
+      log.error('failed with status code', response.status);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     return response.json();
   } catch (error) {
-    console.error('There was a problem with the fetch operation:', error);
+    log.error('There was a problem with the fetch operation:', error);
     throw error;
   }
 };

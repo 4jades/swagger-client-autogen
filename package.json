@@ -14,8 +14,7 @@
   "type": "module",
   "bin": {
     "fetch-swagger": "./scripts/fetch-swagger.js",
-    "generate-all": "./scripts/generate-all.js",
-    "generate-msw": "./scripts/generate-msw.js"
+    "generate-all": "./scripts/generate-all.js"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",

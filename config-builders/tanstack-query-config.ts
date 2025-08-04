@@ -3,7 +3,7 @@ import { P, match } from 'ts-pattern';
 import type { RouteConfig } from 'types/route-config';
 import type { ParsedRoute } from 'types/swagger-typescript-api';
 import { pipe } from '../utils/fp';
-import { buildMutationKeyConstanstContent, buildMutationKeyConstantsName, buildQueryKeyArgs, buildQueryKeyArray, buildQueryKeyConstantsName } from '../utils/tanstack-query-utils';
+import { log } from '../utils/log';
 
 export type TanstackQueryConfig = {
   query: {
@@ -22,86 +22,126 @@ export type TanstackQueryConfig = {
 };
 
 export function generateTanstackQueryConfig(route: ParsedRoute, routeConfig: RouteConfig) {
-  const configMutators = withRouteConfig(route, routeConfig)
+  const configMutators = withRouteConfig(route, routeConfig);
   const pascalCaseRouteName = pascalCase(route.routeName.usage);
 
   const initialTanstackQueryConfig: TanstackQueryConfig = {
     query: {
-      queryKeyArgs: buildQueryKeyArgs(routeConfig),
-      queryKeyConstanstName: buildQueryKeyConstantsName(route.request) ?? '',
-      queryKeyConstanstFunction: `(${routeConfig.request.parameters.signatures.required.join(', ')})=>${buildQueryKeyArray(route)}`,
+      queryKeyArgs: routeConfig.request.parameters.arguments.required.join(', '),
+      queryKeyConstanstName: buildKeyConstantsName(route.request) ?? '',
+      queryKeyConstanstFunction: '',
       queryHookName: `use${pascalCaseRouteName}Query`,
       suspenseQueryHookName: `use${pascalCaseRouteName}SuspenseQuery`,
     },
     mutation: {
-      mutationKeyConstanstName: buildMutationKeyConstantsName(route) ?? '',
-      mutationKeyConstanstContent: buildMutationKeyConstanstContent(route),
+      mutationKeyConstanstName: buildKeyConstantsName(route.request) ?? '',
+      mutationKeyConstanstContent: '',
       mutationHookName: `use${pascalCaseRouteName}Mutation`,
       invalidateQueryKey: [],
     },
   };
 
   return pipe(
+    configMutators.setQueryKeyConstantsFunction,
+    configMutators.setMutationKeyConstantsContent,
     configMutators.setInvalidateQueryKey,
   )(initialTanstackQueryConfig);
-};
-
-function findRequestByQueryKey(route: ParsedRoute, queryKey: string) {
-  const paths = route.specificArgNameResolver?.config.swaggerSchema.paths ?? {}
-
-  const path = findKey(paths, (path) => path.get?.['x-query-key'] === queryKey)
-
-  if (!path) {
-    return null
-  }
-
-  return {path: String(path), method: 'get'}
 }
 
-function withRouteConfig(route: ParsedRoute, _routeConfig: RouteConfig) {
-  const getQueryKeyArgs = (queryKey: string) => {
-    return queryKey.slice(1,-1).split(', ')
-      .map(arg => 
-        match(arg.trim())
-          .with(
-            '$parameters.$query',
-            () => 'params',
-          )
-          .with(
-            P.string.startsWith('$parameters.'),
-            (p) => `variables.${camelCase(p.split('.').at(-1) ?? '')}`,
-          )
-          .with(
-            P.string.startsWith('$payload.'),
-            (p) => `data.${camelCase(p.split('.').at(-1) ?? '')}`,
-          )
-          .otherwise(() => null))
-      .filter(Boolean)
-  }
-
+function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
   return {
+    setQueryKeyConstantsFunction: (config: TanstackQueryConfig) => {
+      const buildQueryKeyArray = (route: ParsedRoute) => {
+        const {
+          request: { path, method, query, payload },
+        } = route;
+
+        if (!path || !method) return null;
+
+        const pathSegments = path
+          .split('/')
+          .filter(segment => segment && segment !== 'api')
+          .map(segment =>
+            segment.match(/\${/) ? segment.replace(/[${}]/g, '').replace(/-/g, '_') : `'${segment.replace(/-/g, '_')}'`,
+          );
+        const queryParamsSegments = query ? 'params' : null;
+        const payloadSegments = payload ? 'payload' : null;
+
+        return `[${[...pathSegments, queryParamsSegments, payloadSegments].filter(Boolean).join(', ')}]`;
+      };
+
+      return {
+        ...config,
+        query: {
+          ...config.query,
+          queryKeyConstanstFunction: `(${routeConfig.request.parameters.signatures.required.join(', ')})=>${buildQueryKeyArray(route)}`,
+        },
+      };
+    },
+    setMutationKeyConstantsContent: (config: TanstackQueryConfig) => {
+      const buildMutationKeyConstanstContent = ({ request: { path = '' } }: ParsedRoute) => {
+        return `[${compact(path.split('/'))
+          .map(segment => `'${segment.replace(/[${}]/g, '')}'`)
+          .join(', ')}]`;
+      };
+
+      return {
+        ...config,
+        mutation: {
+          ...config.mutation,
+          mutationKeyConstanstContent: buildMutationKeyConstanstContent(route),
+        },
+      };
+    },
     setInvalidateQueryKey: (config: TanstackQueryConfig) => {
-      const {raw} = route
-      
-      if (!('x-invalidate-query-key' in raw) || !Array.isArray(raw['x-invalidate-query-key'])) {
-        return config
-      }
+      const { raw } = route;
 
-      const xInvalidateQueryKeys = raw['x-invalidate-query-key']
+      const getQueryKeyArgs = (queryKey: string) => {
+        return queryKey
+          .slice(1, -1)
+          .split(', ')
+          .map(arg =>
+            match(arg.trim())
+              .with('$parameters.$query', () => 'params')
+              .with(P.string.startsWith('$parameters.'), p => `variables.${camelCase(p.split('.').at(-1) ?? '')}`)
+              .with(P.string.startsWith('$payload.'), p => `data.${camelCase(p.split('.').at(-1) ?? '')}`)
+              .otherwise(() => null),
+          )
+          .filter(Boolean);
+      };
 
-      const invalidateQueryKeyCallExpression = xInvalidateQueryKeys.map(key => {
-        const request = findRequestByQueryKey(route, key)
+      const findRequestByQueryKey = (route: ParsedRoute, queryKey: string) => {
+        const paths = route.specificArgNameResolver?.config.swaggerSchema.paths ?? {};
 
-        if (!request) {
-          return null
+        const path = findKey(paths, path => path.get?.['x-query-key'] === queryKey);
+
+        if (!path) {
+          log.warn(`${queryKey}와 일치하는 x-query-key가 존재하지 않습니다.`);
+          return null;
         }
 
-        const {path, method} = request
+        return { path: String(path), method: 'get' };
+      };
 
-        const newArgs = getQueryKeyArgs(key)
+      if (!('x-invalidate-query-key' in raw) || !Array.isArray(raw['x-invalidate-query-key'])) {
+        return config;
+      }
 
-        return `${buildQueryKeyConstantsName({path, method})}(${newArgs.join(', ')})`
-      })
+      const xInvalidateQueryKeys = raw['x-invalidate-query-key'];
+
+      const invalidateQueryKeyCallExpression = xInvalidateQueryKeys.map(key => {
+        const request = findRequestByQueryKey(route, key);
+
+        if (!request) {
+          return null;
+        }
+
+        const { path, method } = request;
+
+        const newArgs = getQueryKeyArgs(key);
+
+        return `${buildKeyConstantsName({ path, method })}(${newArgs.join(', ')})`;
+      });
 
       return {
         ...config,
@@ -109,7 +149,22 @@ function withRouteConfig(route: ParsedRoute, _routeConfig: RouteConfig) {
           ...config.mutation,
           invalidateQueryKey: compact(invalidateQueryKeyCallExpression),
         },
-      }
-    }
+      };
+    },
   };
+}
+
+function buildKeyConstantsName({ path, method }: Pick<ParsedRoute['request'], 'path' | 'method'>) {
+  return (
+    method &&
+    path &&
+    `${method.toUpperCase()}_${path
+      .split('/')
+      .map(segment =>
+        segment.match(/\$?{/)
+          ? segment.replace(/[${}]/g, '').toUpperCase().replace(/_/g, '')
+          : segment.toUpperCase().replace(/-/g, '_'),
+      )
+      .join('_')}`
+  );
 }

@@ -9,6 +9,7 @@ import { generateModuleConfig } from '../config-builders/module-config.ts';
 import { generateConfig } from '../config-builders/route-config.ts';
 import { generateTanstackQueryConfig } from '../config-builders/tanstack-query-config.ts';
 import { writeFileToPath } from '../utils/file.ts';
+import { log } from '../utils/log.ts';
 import { buildRequestFunctionName } from '../utils/route-utils.ts';
 import { generateApiCode } from '../utils/swagger-typescript-api.ts';
 
@@ -50,6 +51,8 @@ const generateApiFunctionCode = async config => {
   const templatePath = projectTemplate
     ? path.resolve(process.cwd(), projectTemplate)
     : path.resolve(__dirname, '../templates');
+
+  log.info('api, apiInstance, dto 코드를 생성하고 있어요...');
 
   const apiFunctionCode = await generateApiCode({
     uri,
@@ -118,6 +121,8 @@ const generateTanstackQueryCode = async config => {
     ? path.resolve(process.cwd(), projectTemplate, 'tanstack-query')
     : path.resolve(__dirname, '../templates/tanstack-query');
 
+  log.info('tanstack-query 코드를 생성하고 있어요...');
+
   const tanstackQueryCode = await generateApiCode({
     uri,
     username,
@@ -149,43 +154,7 @@ const generateTanstackQueryCode = async config => {
         const routeConfig = generateConfig(route);
         const moduleConfig = generateModuleConfig(route, config);
         const tanstackQueryConfig = generateTanstackQueryConfig(route, routeConfig);
-
-        // const saveRoute = async route => {
-        //   await writeFileToPath(
-        //     `/Users/user/WebstormProjects/swagger-client-autogen/${route.routeName.usage}.json`,
-        //     JSON.stringify(
-        //       route,
-        //       (() => {
-        //         const seen = new WeakSet();
-        //         return (key, value) => {
-        //           if (typeof value === 'object' && value !== null) {
-        //             if (seen.has(value)) {
-        //               return '[Circular]';
-        //             }
-        //             seen.add(value);
-        //           }
-        //           return value;
-        //         };
-        //       })(),
-        //       2,
-        //     ),
-        //   );
-        // };
-
-        // if (route.raw.operationId === 'get_chats_chats_get') {
-        //   // await saveRoute(route);
-        // } else if (route.raw.operationId === 'submit_problem_problems__problem_id__submit_post') {
-        //   // await saveRoute(route);
-        // } else if (route.raw.operationId === 'init_options_chats_init_options_get') {
-        //   // await saveRoute(route);
-        // } else if (route.raw.operationId === 'delete_chat_chats__chat_id__delete') {
-        //   await saveRoute(route);
-        // } else if (route.raw.operationId === 'batch_upload_files_temp_batch_upload_post') {
-        //   console.log(routeConfig);
-
-        //   // await saveRoute(route);
-        // }
-
+        
         return {
           ...route,
           routeConfig,
@@ -231,6 +200,8 @@ const generateSchemaCode = async config => {
   const templatePath = projectTemplate
     ? path.resolve(process.cwd(), projectTemplate)
     : path.resolve(__dirname, '../templates');
+
+  log.info('schema 코드를 생성하고 있어요...');
 
   const apiFunctionCode = await generateApiCode({
     uri,

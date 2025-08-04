@@ -1,8 +1,11 @@
 import type { CodegenConfig, InputCodegenConfig } from '../types/codegen-config';
+import { log } from '../utils/log';
 import { getAbsoluteFilePath } from '../utils/path';
 
 export const setupCodegenConfig = (config: InputCodegenConfig): CodegenConfig => {
-  return {
+  log.info('config 파일을 읽어오고 있어요...');
+
+  const res = {
     ...config,
     customOutput: {
       aliasInfo: {
@@ -64,6 +67,21 @@ export const setupCodegenConfig = (config: InputCodegenConfig): CodegenConfig =>
       },
     },
   };
+
+  // CustomOutput 설정 출력
+  log.info('파일 저장 경로:');
+
+  // PathInfo 테이블
+  const pathTable = Object.entries(res.customOutput.pathInfo)
+    .filter(([key]) => key !== 'streamHandlers')
+    .map(([key, value]) => ({
+      모듈: key,
+      상대경로: 'output' in value ? value.output.relative : '-',
+      별칭: value.alias,
+    }));
+  console.table(pathTable);
+
+  return res;
 };
 
 function buildPathOutput(defaultPath: string, relativePath?: string) {

@@ -7,6 +7,7 @@ import yaml from 'js-yaml';
 import minimist from 'minimist';
 import { fetchSwagger } from '../utils/fetch-swagger';
 import { writeFileToPath } from '../utils/file';
+import { log } from '../utils/log';
 
 function extractQueryKey(pathKey, tags, parameters) {
   const pathSegments = pathKey.split('/').filter(Boolean);
@@ -46,7 +47,7 @@ export function addQueryKeyToGetRequests(swaggerData) {
     const queryKey = extractQueryKey(pathKey, getOp.tags, getOp.parameters);
     pathItem.get = injectQueryKey(getOp, queryKey);
 
-    console.log(`✅ ${pathKey} → x-query-key: ${queryKey}`);
+    log.success(`${pathKey} → x-query-key: ${queryKey}`);
   }
 
   return swaggerData;
@@ -87,9 +88,11 @@ function mergeCustomFields(newOperation, existingOperation) {
         const newQueryKey = newOperation[key];
 
         if (existingQueryKey !== newQueryKey) {
-          console.warn(`⚠️ Query key changed for ${existingOperation.operationId || 'unknown operation'}:`);
-          console.warn(`  Old: ${existingQueryKey}`);
-          console.warn(`  New: ${newQueryKey}`);
+          console.group();
+          log.warn(`Query key changed for ${existingOperation.operationId || 'unknown operation'}:`);
+          log.log(`  Old: ${existingQueryKey}`);
+          log.log(`  New: ${newQueryKey}`);
+          console.groupEnd();
         }
         continue;
       }
@@ -121,10 +124,10 @@ function mergeSwaggerData(newSwaggerData, existingSwaggerData) {
       // 병합된 operation을 새로운 swagger 데이터에 적용
       mergedSwaggerData.paths[newOpInfo.pathKey][newOpInfo.method] = mergedOperation;
 
-      console.log(`🔄 Merged custom fields for ${operationId}`);
+      log.info(`Merged custom fields for ${operationId}`);
     } else {
       // 새로운 swagger에는 없지만 기존에 있던 operation
-      console.log(`⚠️  Operation ${operationId} exists in local file but not in server response`);
+      log.warn(`Operation ${operationId} exists in local file but not in server response`);
     }
   }
 
@@ -170,11 +173,11 @@ try {
       const existingYamlContent = fs.readFileSync(targetFilePath, 'utf8');
       const existingSwaggerData = yaml.load(existingYamlContent);
 
-      console.log('📁 Found existing swagger file, merging...');
+      log.info('Found existing swagger file, merging...');
       finalSwaggerData = mergeSwaggerData(modifiedSwaggerData, existingSwaggerData);
-      console.log('✅ Merge completed');
+      log.success('Merge completed');
     } catch (mergeError) {
-      console.warn('⚠️  Failed to merge with existing file, using new data only:', mergeError.message);
+      log.warn('Failed to merge with existing file, using new data only:', mergeError.message);
       finalSwaggerData = modifiedSwaggerData;
     }
   }
@@ -183,7 +186,7 @@ try {
 
   await writeFileToPath(targetFilePath, yamlData);
 
-  console.log('✅  Successfully imported and converted swagger file to YAML.');
+  log.success('Successfully imported and converted swagger file to YAML.');
 } catch (e) {
-  console.error('❗️ Failed to import and convert swagger file.', e);
+  log.error('Failed to import and convert swagger file.', e);
 }
