@@ -62,6 +62,8 @@ export const <%~ query.queryHookName %> = <TData=<%~ routeConfig.response.dtoNam
     return useQuery({
         ...queries.<% ~routeConfig.request.functionName %>(requestArgs),
         ...options,
+        <%~ query.staleTime ? `staleTime: ${query.staleTime},` : '' %>
+        <%~ query.gcTime ? `gcTime: ${query.gcTime},` : '' %>
     })
 }
 
@@ -84,6 +86,8 @@ export const <%~ query.suspenseQueryHookName %> = <TData=<%~ routeConfig.respons
     return useSuspenseQuery({
         ...queries.<% ~routeConfig.request.functionName %>(requestArgs),
         ...options,
+        <%~ query.staleTime ? `staleTime: ${query.staleTime},` : '' %>
+        <%~ query.gcTime ? `gcTime: ${query.gcTime},` : '' %>
     })
 }
 
