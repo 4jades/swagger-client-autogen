@@ -23,7 +23,8 @@ import { match } from 'ts-pattern';
 <%~ codegenConfig.createSchema && includeFile('./imports/schema-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
 <%~ includeFile('./imports/dto-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
 <%~ includeFile('./imports/stream-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
-import { validateSchema, createSearchParams } from '@/shared/api/utils.gen';
+<%~ includeFile('./imports/api-utils.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
+
 
 export class <%= moduleConfig.apiClassName %> {
 private readonly instance: KyInstance;

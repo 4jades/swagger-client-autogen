@@ -1,8 +1,8 @@
 import { camelCase, compact, pascalCase } from "es-toolkit";
-import type { RouteConfig } from "../types/route-config.ts";
-import type { ParsedRoute } from "../types/swagger-typescript-api.ts";
-import { pipe } from "../utils/fp.ts";
-import { getDiscriminatorMatcher, isValidType } from "../utils/route-utils.ts";
+import type { RouteConfig } from "../types/route-config";
+import type { ParsedRoute } from "../types/swagger-typescript-api";
+import { pipe } from "../utils/fp";
+import { getDiscriminatorMatcher, isValidType } from "../utils/route-utils";
 
 
 export function generateConfig(route: ParsedRoute) {

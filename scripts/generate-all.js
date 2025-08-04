@@ -69,16 +69,16 @@ const generateApiFunctionCode = async (config) => {
 		templateInfos: [
 			{ name: "api", fileName: "api" },
 			{ name: "routeTypes", fileName: "api-instance" },
+			{ name: "dataContracts", fileName: "data-contracts" },
 			/**
 			 * @description: 아래 값들은 사용되지 않지만, 모든 templateInfos 값을 넣어야 하기 때문에 기본값으로 추가함
 			 */
 			{ name: "dataContractJsDoc", fileName: "data-contract-jsdoc" },
+			{ name: "objectFieldJsDoc", fileName: "object-field-jsdoc" },
 			{ name: "interfaceDataContract", fileName: "interface-data-contract" },
 			{ name: "typeDataContract", fileName: "type-data-contract" },
 			{ name: "enumDataContract", fileName: "enum-data-contract" },
-			{ name: "objectFieldJsDoc", fileName: "object-field-jsdoc" },
 			{ name: "httpClient", fileName: "http-client" },
-			{ name: "routeName", fileName: "route-name" },
 		],
 		hooks: {
 			onCreateRouteName: (routeNameInfo, rawRouteInfo) => {
@@ -139,6 +139,7 @@ const generateTanstackQueryCode = async (config) => {
 		templateInfos: [
 			{ name: "api", fileName: "queries" },
 			{ name: "routeTypes", fileName: "mutations" },
+			{ name: "dataContracts", fileName: "data-contracts" },
 			/**
 			 * @description: 아래 값들은 사용되지 않지만, 모든 templateInfos 값을 넣어야 하기 때문에 기본값으로 추가함
 			 */
@@ -148,7 +149,6 @@ const generateTanstackQueryCode = async (config) => {
 			{ name: "enumDataContract", fileName: "enum-data-contract" },
 			{ name: "objectFieldJsDoc", fileName: "object-field-jsdoc" },
 			{ name: "httpClient", fileName: "http-client" },
-			{ name: "routeName", fileName: "route-name" },
 		],
 		hooks: {
 			onCreateRouteName: (routeNameInfo, rawRouteInfo) => {
@@ -288,16 +288,13 @@ const generateSchemaCode = async (config) => {
 
 		//TODO 이부분도 config로 입력 받을 수 있게 수정하기
 		const outputPath = {
-			"stream-utils": "src/shared/api/stream.gen.ts",
-			"api-utils": "src/shared/api/utils.gen.ts",
-			"type-guards": "src/shared/api/type-guards.gen.ts",
+			"stream-utils": config.customOutput.pathInfo.streamUtils.output.absolute,
+			"api-utils": config.customOutput.pathInfo.apiUtils.output.absolute,
+			"type-guards": config.customOutput.pathInfo.typeGuards.output.absolute,
 		}[fileName];
 
 		if (outputPath) {
-			await writeFileToPath(
-				path.resolve(process.cwd(), outputPath),
-				fileContent,
-			);
+			await writeFileToPath(outputPath, fileContent);
 		}
 	}
 };

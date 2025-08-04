@@ -40,10 +40,24 @@ const parameterDtoList = routes.combined.map((route) => {
 }).flat();
 
 const allDtoList = [...contractList, ...parameterDtoList];
+
+const routeDependency = routes.combined.at(0)
+
+const moduleConfig = routeDependency.routes.at(0)?.moduleConfig;
+const codegenConfig = routeDependency.routes.at(0)?.codegenConfig;
+
+const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
+  fromPath: codegenConfig.customOutput.pathInfo.typeGuards.output.relative
+})
+
+const { pathInfo } = codegenConfig.customOutput;
+console.log(resolveRelativeImportPath(pathInfo.dto.alias));
+
+//TODO: 모든 라우트에 대해 생성되도록 해야함
 %>
 
-import type { <%~ allDtoList.map((dto) => dto.dtoName).join(', ') %> } from './dto';
-import { <%~ allDtoList.map((dto) => dto.schemaName).join(', ') %> } from './schema.gen';
+<%~ includeFile('./imports/dto-import.ejs', { route: routeDependency, utils, modelTypes, codegenConfig, resolveRelativeImportPath }) %>
+<%~ includeFile('./imports/schema-import.ejs', { route: routeDependency, utils, modelTypes, codegenConfig, resolveRelativeImportPath }) %>
 
 
 <% for (const parameterDto of allDtoList) { %>

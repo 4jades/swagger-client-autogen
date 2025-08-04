@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 class MonoSchemaParser {
   schema;
   typeName;
