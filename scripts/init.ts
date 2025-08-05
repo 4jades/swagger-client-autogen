@@ -1,5 +1,3 @@
-#!/usr/bin/env -S npx tsx
-
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as p from '@clack/prompts';
@@ -22,7 +20,7 @@ function detectPackageManager(): string {
 
 // Config 파일 템플릿 생성
 function generateConfigTemplate(config: InitConfig): string {
-  return `import type { InputCodegenConfig } from 'swagger-client-autogen/types/codegen-config';
+  return `import type { InputCodegenConfig } from 'swagger-client-autogen';
 
 const config: InputCodegenConfig = {
   // Swagger 설정

@@ -5,20 +5,20 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "lib": ["ES2022"],
-    
+
     // Node.js 관련 설정
     "types": ["node"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    
+
     // 출력 설정
     "outDir": "./dist",
     "rootDir": "./",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    
+
     // 엄격한 타입 체크
     "strict": true,
     "noImplicitAny": true,
@@ -27,19 +27,18 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true,
-    
+
     // 모듈 해석 및 경로
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"]
     },
-    
+
     // 기타 설정
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "removeComments": false,
     "preserveConstEnums": true,
-    "incremental": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },

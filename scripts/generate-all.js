@@ -1,5 +1,3 @@
-#!/usr/bin/env tsx
-
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import minimist from 'minimist';

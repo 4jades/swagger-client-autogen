@@ -4,32 +4,25 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsup && yarn postbuild",
-    "postbuild": "cp -r templates dist/ && cp -r types dist/ && cp -r utils dist/ && cp -r config-builders dist/",
-    "build:watch": "tsup --watch",
-    "prepublishOnly": "yarn build"
+    "postbuild": "cp -r templates dist/ && cp -r types dist/ && cp -r utils dist/ && cp -r config-builders dist/ && cp scripts/*.js dist/scripts/",
+    "build:watch": "tsup --watch"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
-  "private": true,
+
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/index.d.ts"
     }
   },
   "bin": {
-    "swagger-autogen": "./dist/scripts/cli.js"
+    "swagger-client-autogen": "./dist/cli.js"
   },
   "files": [
-    "dist/",
-    "scripts/",
-    "templates/",
-    "types/",
-    "utils/",
-    "config-builders/"
+    "dist/"
   ],
   "devDependencies": {
     "@types/node": "^24.1.0",

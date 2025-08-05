@@ -1,5 +1,3 @@
-#!/usr/bin/env -S npx tsx
-
 import { spawn } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,14 +33,14 @@ function showHelp() {
 function runScript(scriptPath: string, args: string[]) {
   const child = spawn('npx', ['tsx', scriptPath, ...args], {
     stdio: 'inherit',
-    cwd: process.cwd()
+    cwd: process.cwd(),
   });
 
-  child.on('close', (code) => {
+  child.on('close', code => {
     process.exit(code);
   });
 
-  child.on('error', (error) => {
+  child.on('error', error => {
     console.error(`실행 오류: ${error.message}`);
     process.exit(1);
   });
@@ -50,23 +48,23 @@ function runScript(scriptPath: string, args: string[]) {
 
 switch (command) {
   case 'init':
-    runScript(join(__dirname, 'init.ts'), args);
+    runScript(join(__dirname, 'scripts', 'init.js'), args);
     break;
-    
+
   case 'fetch':
-    runScript(join(__dirname, 'fetch-swagger.js'), args);
+    runScript(join(__dirname, 'scripts', 'fetch-swagger.js'), args);
     break;
-    
+
   case 'generate':
-    runScript(join(__dirname, 'generate-all.js'), args);
+    runScript(join(__dirname, 'scripts', 'generate-all.js'), args);
     break;
-    
+
   case '--help':
   case '-h':
   case 'help':
     showHelp();
     break;
-    
+
   default:
     if (!command) {
       console.error('❌ 명령어를 입력해주세요.');
