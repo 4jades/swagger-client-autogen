@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "yarn tsc && mkdir -p dist/scripts && cp scripts/*.js dist/scripts/",
-    "pre-build": "yarn tsc"
+    "build": "tsup && yarn postbuild",
+    "postbuild": "cp -r templates dist/ && cp -r types dist/ && cp -r utils dist/ && cp -r config-builders dist/",
+    "build:watch": "tsup --watch",
+    "prepublishOnly": "yarn build"
   },
   "keywords": [],
   "author": "",
@@ -13,13 +15,25 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "bin": {
-    "swagger-autogen": "./scripts/cli.ts"
+    "swagger-autogen": "./dist/scripts/cli.js"
   },
+  "files": [
+    "dist/",
+    "scripts/",
+    "templates/",
+    "types/",
+    "utils/",
+    "config-builders/"
+  ],
   "devDependencies": {
     "@types/node": "^24.1.0",
+    "tsup": "^8.5.0",
     "typescript": "^5.0.0"
   },
   "packageManager": "yarn@4.7.0",
