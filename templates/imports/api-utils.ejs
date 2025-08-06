@@ -6,6 +6,6 @@
 const { moduleConfig, codegenConfig, resolveRelativeImportPath } = it;
 
 const { pathInfo } = codegenConfig.customOutput;
-const apiUtilsAlias = resolveRelativeImportPath(pathInfo.apiUtils.alias)
+const apiUtilsAlias = resolveRelativeImportPath(pathInfo.apiUtils.output.relative)
 %>
 import { validateSchema, createSearchParams } from '<%~ apiUtilsAlias %>';

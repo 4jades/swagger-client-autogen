@@ -7,7 +7,7 @@ const { utils, route, modelTypes, codegenConfig, resolveRelativeImportPath } = i
 const { pascalCase } = utils;
 const routes = route.routes;
 const { pathInfo } = codegenConfig.customOutput;
-const streamHandlersAlias = resolveRelativeImportPath(pathInfo.streamHandlers.alias)
+const streamHandlersAlias = resolveRelativeImportPath(pathInfo.streamHandlers.output.relative)
 
 const streamCallbackAndHandlerTypes = routes
                                         .filter(route=>route.request.contentTypes?.includes('application/json') && route.response.contentTypes?.includes('text/event-stream'))

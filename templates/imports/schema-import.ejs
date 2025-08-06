@@ -7,7 +7,7 @@ const { route, codegenConfig, resolveRelativeImportPath } = it;
 const routes = route.routes;
 const { pathInfo } = codegenConfig.customOutput
 
-const schemaAlias = resolveRelativeImportPath(pathInfo.schema.alias)
+const schemaAlias = resolveRelativeImportPath(pathInfo.schema.output.relative)
 const allSchemaList = [...routes.map(({routeConfig}) => [...routeConfig.request.schema.list, ...routeConfig.response.schema.list]).flat()].join(",");
 %>
 

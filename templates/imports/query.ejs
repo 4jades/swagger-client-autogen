@@ -7,6 +7,6 @@ const { moduleConfig, codegenConfig, resolveRelativeImportPath } = it;
 
 const { query } = moduleConfig;
 const { pathInfo } = codegenConfig.customOutput;
-const queriesAlias = resolveRelativeImportPath(pathInfo.queries.alias)
+const queriesAlias = resolveRelativeImportPath(pathInfo.queries.output.relative)
 %>
 import { <%~ query.queryKeyObjectName %> } from '<%~ queriesAlias %>';

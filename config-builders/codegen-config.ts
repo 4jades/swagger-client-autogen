@@ -1,6 +1,6 @@
 import type { CodegenConfig, InputCodegenConfig } from '../types/codegen-config';
 import { log } from '../utils/log';
-import { getAbsoluteFilePath } from '../utils/path';
+import { generateAlias, getAbsoluteFilePath } from '../utils/path';
 
 export const setupCodegenConfig = (config: InputCodegenConfig): CodegenConfig => {
   log.info('config 파일을 읽어오고 있어요...');
@@ -14,55 +14,43 @@ export const setupCodegenConfig = (config: InputCodegenConfig): CodegenConfig =>
       },
       pathInfo: {
         dto: {
-          output: buildPathOutput('src/shared/api/dto.ts', config.customOutput?.pathInfo?.dto?.output),
-          alias: config.customOutput?.pathInfo?.dto?.alias ?? '@/shared/api/dto',
+          output: buildPathOutput('src/shared/api/dto.ts', config.customOutput?.pathInfo?.dto),
         },
         api: {
-          output: buildPathOutput('src/entities/{moduleName}/api/index.ts', config.customOutput?.pathInfo?.api?.output),
-          alias: config.customOutput?.pathInfo?.api?.alias ?? '@/entities/{moduleName}/api/index',
+          output: buildPathOutput('src/entities/{moduleName}/api/index.ts', config.customOutput?.pathInfo?.api),
         },
         apiInstance: {
           output: buildPathOutput(
             'src/entities/{moduleName}/api/instance.ts',
-            config.customOutput?.pathInfo?.apiInstance?.output,
+            config.customOutput?.pathInfo?.apiInstance,
           ),
-          alias: config.customOutput?.pathInfo?.apiInstance?.alias ?? '@/entities/{moduleName}/api/instance',
         },
         queries: {
-          output: buildPathOutput(
-            'src/entities/{moduleName}/api/queries.ts',
-            config.customOutput?.pathInfo?.queries?.output,
-          ),
-          alias: config.customOutput?.pathInfo?.queries?.alias ?? '@/entities/{moduleName}/api/queries',
+          output: buildPathOutput('src/entities/{moduleName}/api/queries.ts', config.customOutput?.pathInfo?.queries),
         },
         mutations: {
           output: buildPathOutput(
             'src/entities/{moduleName}/api/mutations.ts',
-            config.customOutput?.pathInfo?.mutations?.output,
+            config.customOutput?.pathInfo?.mutations,
           ),
-          alias: config.customOutput?.pathInfo?.mutations?.alias ?? '@/entities/{moduleName}/api/mutations',
         },
         schema: {
-          output: buildPathOutput('src/shared/api/schema.gen.ts', config.customOutput?.pathInfo?.schema?.output),
-          alias: config.customOutput?.pathInfo?.schema?.alias ?? '@/shared/api/schema.gen',
+          output: buildPathOutput('src/shared/api/schema.gen.ts', config.customOutput?.pathInfo?.schema),
         },
         apiUtils: {
-          output: buildPathOutput('src/shared/api/utils.gen.ts', config.customOutput?.pathInfo?.apiUtils?.output),
-          alias: config.customOutput?.pathInfo?.apiUtils?.alias ?? '@/shared/api/utils.gen',
+          output: buildPathOutput('src/shared/api/utils.gen.ts', config.customOutput?.pathInfo?.apiUtils),
         },
         streamUtils: {
-          output: buildPathOutput('src/shared/api/stream.gen.ts', config.customOutput?.pathInfo?.streamUtils?.output),
-          alias: config.customOutput?.pathInfo?.streamUtils?.alias ?? '@/shared/api/stream.gen',
+          output: buildPathOutput('src/shared/api/stream.gen.ts', config.customOutput?.pathInfo?.streamUtils),
         },
         typeGuards: {
-          output: buildPathOutput(
-            'src/shared/api/type-guards.gen.ts',
-            config.customOutput?.pathInfo?.typeGuards?.output,
-          ),
-          alias: config.customOutput?.pathInfo?.typeGuards?.alias ?? '@/shared/api/type-guards.gen',
+          output: buildPathOutput('src/shared/api/type-guards.gen.ts', config.customOutput?.pathInfo?.typeGuards),
         },
         streamHandlers: {
-          alias: config.customOutput?.pathInfo?.streamHandlers?.alias ?? '@/entities/{moduleName}/api/stream-handlers',
+          output: buildPathOutput(
+            'src/entities/{moduleName}/api/stream-handlers',
+            config.customOutput?.pathInfo?.streamHandlers,
+          ),
         },
       },
     },
@@ -72,13 +60,11 @@ export const setupCodegenConfig = (config: InputCodegenConfig): CodegenConfig =>
   log.info('파일 저장 경로:');
 
   // PathInfo 테이블
-  const pathTable = Object.entries(res.customOutput.pathInfo)
-    .filter(([key]) => key !== 'streamHandlers')
-    .map(([key, value]) => ({
-      모듈: key,
-      상대경로: 'output' in value ? value.output.relative : '-',
-      별칭: value.alias,
-    }));
+  const pathTable = Object.entries(res.customOutput.pathInfo).map(([key, value]) => ({
+    모듈: key,
+    상대경로: value.output.relative,
+    별칭: generateAlias(value.output.relative, res.customOutput.aliasInfo.aliasMap),
+  }));
   console.table(pathTable);
 
   return res;

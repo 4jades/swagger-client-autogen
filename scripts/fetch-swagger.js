@@ -6,6 +6,7 @@ import minimist from 'minimist';
 import { fetchSwagger } from '../utils/fetch-swagger';
 import { writeFileToPath } from '../utils/file';
 import { log } from '../utils/log';
+import { isUrl } from '../utils/url';
 
 function extractQueryKey(pathKey, tags, parameters) {
   const pathSegments = pathKey.split('/').filter(Boolean);
@@ -133,35 +134,57 @@ function mergeSwaggerData(newSwaggerData, existingSwaggerData) {
 }
 
 const argv = minimist(process.argv.slice(2), {
-  string: ['url'],
+  string: ['config', 'output'],
   alias: {
-    u: 'url',
-    un: 'username',
-    pw: 'password',
+    c: 'config',
+    o: 'output',
   },
 });
 
-const { url } = argv;
+const { config: configPath, output } = argv;
 
-const usernameArg = argv.username;
-const passwordArg = argv.password;
+if (!configPath) {
+  console.error('❗️ 오류: Config 파일 경로를 제공해주세요');
+  console.error('사용법: node fetch-swagger.js --config <config-file-path> [--output <output-path>]');
+  process.exit(1);
+}
 
-if (!url) {
-  console.error('❗️ 오류: Swagger URL 또는 Swagger 파일 이름을 제공해주세요');
-  console.error(
-    '사용법: node fetch-swagger.js --uri <swagger-url|swagger-file-name> ' +
-      '[--username <username>] [--password <password>] ',
-  );
+// Config 파일 로드
+const loadConfig = async configPath => {
+  try {
+    const absoluteConfigPath = path.resolve(process.cwd(), configPath);
+    const { default: config } = await import(`file://${absoluteConfigPath}`);
+    return config;
+  } catch (error) {
+    log.error(`Config 파일을 로드할 수 없습니다: ${configPath}`, error);
+    process.exit(1);
+  }
+};
+
+const config = await loadConfig(configPath);
+
+if (!config.uri) {
+  console.error('❗️ 오류: Config 파일에 uri(Swagger URI)가 정의되지 않았습니다');
+  process.exit(1);
+}
+
+if (!isUrl(config.uri)) {
+  // URI가 웹 주소인지 확인
+  console.error('❗️ 오류: fetch 명령어는 웹 URL만 지원합니다. 로컬 파일은 지원하지 않습니다.');
+  console.error(`제공된 URI: ${config.uri}`);
   process.exit(1);
 }
 
 try {
-  const swaggerData = await fetchSwagger(url, usernameArg, passwordArg);
+  const swaggerData = await fetchSwagger(config.uri, config.username, config.password);
 
   // GET 요청에 x-query-key 추가
   const modifiedSwaggerData = addQueryKeyToGetRequests(swaggerData);
 
-  const targetFilePath = path.resolve(process.cwd(), `swagger/${kebabCase(modifiedSwaggerData.info.title)}.yml`);
+  // 출력 경로 결정
+  const targetFilePath = output
+    ? path.resolve(process.cwd(), output)
+    : path.resolve(process.cwd(), `swagger/${kebabCase(modifiedSwaggerData.info.title)}.yml`);
 
   // 기존 파일이 있는지 확인하고 병합
   let finalSwaggerData = modifiedSwaggerData;

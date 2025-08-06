@@ -22,7 +22,7 @@ function showHelp() {
 
 예시:
   swagger-autogen init
-  swagger-autogen fetch --config swagger/config.ts
+  swagger-autogen fetch --config swagger/config.ts --output swagger/api.yml
   swagger-autogen generate --config swagger/config.ts
 
 도움말:

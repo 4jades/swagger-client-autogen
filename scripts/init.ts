@@ -48,45 +48,16 @@ const config: InputCodegenConfig = {
       aliasMapDepth: 2,
     },
     pathInfo: {
-      dto: {
-        output: 'src/shared/api/dto.ts',
-        alias: '@/shared/api/dto',
-      },
-      api: {
-        output: 'src/entities/{moduleName}/api/index.ts',
-        alias: '@/entities/{moduleName}/api/index',
-      },
-      apiInstance: {
-        output: 'src/entities/{moduleName}/api/instance.ts',
-        alias: '@/entities/{moduleName}/api/instance',
-      },
-      queries: {
-        output: 'src/entities/{moduleName}/api/queries.ts',
-        alias: '@/entities/{moduleName}/api/queries',
-      },
-      mutations: {
-        output: 'src/entities/{moduleName}/api/mutations.ts',
-        alias: '@/entities/{moduleName}/api/mutations',
-      },
-      schema: {
-        output: 'src/shared/api/schema.gen.ts',
-        alias: '@/shared/api/schema.gen',
-      },
-      apiUtils: {
-        output: 'src/shared/api/utils.gen.ts',
-        alias: '@/shared/api/utils.gen',
-      },
-      streamUtils: {
-        output: 'src/shared/api/stream.gen.ts',
-        alias: '@/shared/api/stream.gen',
-      },
-      typeGuards: {
-        output: 'src/shared/api/type-guards.gen.ts',
-        alias: '@/shared/api/type-guards.gen',
-      },
-      streamHandlers: {
-        alias: '@/entities/{moduleName}/api/stream-handlers',
-      },
+      dto: 'src/shared/api/dto.ts',
+      api: 'src/entities/{moduleName}/api/index.ts',
+      apiInstance: 'src/entities/{moduleName}/api/instance.ts',
+      queries: 'src/entities/{moduleName}/api/queries.ts',
+      mutations: 'src/entities/{moduleName}/api/mutations.ts',
+      schema: 'src/shared/api/schema.gen.ts',
+      apiUtils: 'src/shared/api/utils.gen.ts',
+      streamUtils: 'src/shared/api/stream.gen.ts',
+      typeGuards: 'src/shared/api/type-guards.gen.ts',
+      streamHandlers: 'src/entities/{moduleName}/api/stream-handlers',
     },
   },
   */

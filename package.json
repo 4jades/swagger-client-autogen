@@ -9,7 +9,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "description": "",
 
   "type": "module",
@@ -21,9 +21,7 @@
   "bin": {
     "swagger-client-autogen": "./dist/cli.js"
   },
-  "files": [
-    "dist/"
-  ],
+  "files": ["dist/"],
   "devDependencies": {
     "@types/node": "^24.1.0",
     "tsup": "^8.5.0",
