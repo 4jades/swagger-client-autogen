@@ -7,9 +7,10 @@ const { utils, route, modelTypes, config } = it;
 const { pascalCase } = utils;
 const { moduleName, routes } = route;
 
-const mutationRoutes = routes
-    .filter(({ request: { method } }) => ['post','patch','put','delete'].includes(method))
-    .filter(({ response }) => !response.contentTypes?.includes('text/event-stream'));
+const mutationKeyRoutes = routes
+    .filter(({ request: { method } }) => ['post','patch','put','delete'].includes(method));
+const mutationRoutes = mutationKeyRoutes.filter(({ response }) => !response.contentTypes?.includes('text/event-stream'));
+
 const commonMeta = mutationRoutes.at(0)?.customeMeta;
 const moduleConfig = routes.at(0)?.moduleConfig;
 const codegenConfig = routes.at(0)?.codegenConfig;
@@ -33,7 +34,7 @@ import type { KyInstance, Options } from 'ky';
 
 
 export const <% ~moduleConfig.mutation.mutationKeyObjectName %> = {
-<% for (const {hookConfig: {mutation}} of mutationRoutes) { %>
+<% for (const {hookConfig: {mutation}} of mutationKeyRoutes) { %>
     <% ~mutation.mutationKeyConstanstName %>: <% ~mutation.mutationKeyConstanstContent %>,
 <% } %>
 };
