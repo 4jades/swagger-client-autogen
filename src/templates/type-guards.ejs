@@ -41,10 +41,15 @@ const parameterDtoList = routes.combined.map((route) => {
 
 const allDtoList = [...contractList, ...parameterDtoList];
 
-const routeDependency = routes.combined.at(0)
+const allRouteDependencies = routes.combined;
+const flatRoute = allRouteDependencies.reduce((acc, v) => {
+  acc.routes.push(...v.routes);
+  return acc;
+}, {routes: []});
 
-const moduleConfig = routeDependency.routes.at(0)?.moduleConfig;
-const codegenConfig = routeDependency.routes.at(0)?.codegenConfig;
+const firstRoute = allRouteDependencies.at(0)
+const moduleConfig = firstRoute.routes.at(0)?.moduleConfig;
+const codegenConfig = firstRoute.routes.at(0)?.codegenConfig;
 
 const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
   fromPath: codegenConfig.customOutput.pathInfo.typeGuards.output.relative
@@ -55,8 +60,8 @@ const { pathInfo } = codegenConfig.customOutput;
 //TODO: 모든 라우트에 대해 생성되도록 해야함
 %>
 
-<%~ includeFile('./imports/dto-import.ejs', { route: routeDependency, utils, modelTypes, codegenConfig, resolveRelativeImportPath }) %>
-<%~ includeFile('./imports/schema-import.ejs', { route: routeDependency, utils, modelTypes, codegenConfig, resolveRelativeImportPath }) %>
+<%~ includeFile('./imports/dto-import.ejs', { route: flatRoute, utils, modelTypes, codegenConfig, resolveRelativeImportPath }) %>
+<%~ includeFile('./imports/schema-import.ejs', { route: flatRoute, contractList, utils, modelTypes, codegenConfig, resolveRelativeImportPath }) %>
 
 
 <% for (const parameterDto of allDtoList) { %>

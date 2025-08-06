@@ -16,9 +16,15 @@ export function generateConfig(route: ParsedRoute) {
       },
       query: {
         dtoName: '',
+        schema: {
+          name: '',
+        },
       },
       headers: {
         dtoName: '',
+        schema: {
+          name: '',
+        },
       },
       payload: {
         dtoName: '',
@@ -54,8 +60,8 @@ export function generateConfig(route: ParsedRoute) {
     configMutators.setRequestFunctionName,
     configMutators.setPathParamsSignatures,
     configMutators.setPathParamsArguments,
-    configMutators.setQueryParamsDtoName,
-    configMutators.setHeaderDtoName,
+    configMutators.setQueryInfo,
+    configMutators.setHeaderInfo,
     configMutators.setPayloadDtoName,
     configMutators.setRequestFunctionOptionsTypeExpression,
     configMutators.setRequestRequiredSignatures,
@@ -95,18 +101,20 @@ function withRoute(route: ParsedRoute) {
           }) ?? [];
       });
     },
-    setQueryParamsDtoName: (config: RouteConfig): RouteConfig => {
+    setQueryInfo: (config: RouteConfig): RouteConfig => {
       const { request, routeName } = route;
 
       return produce(config, draft => {
         draft.request.query.dtoName = request.query ? pascalCase(`${routeName.original}QueryParams`) : null;
+        draft.request.query.schema.name = request.query ? `${routeName.original}QueryParamsSchema` : '';
       });
     },
-    setHeaderDtoName: (config: RouteConfig): RouteConfig => {
+    setHeaderInfo: (config: RouteConfig): RouteConfig => {
       const { request, routeName } = route;
 
       return produce(config, draft => {
         draft.request.headers.dtoName = request.headers ? pascalCase(`${routeName.original}Headers`) : null;
+        draft.request.headers.schema.name = request.headers ? `${routeName.original}HeadersSchema` : '';
       });
     },
     setPayloadDtoName: (config: RouteConfig): RouteConfig => {
