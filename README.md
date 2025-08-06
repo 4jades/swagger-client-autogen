@@ -543,17 +543,28 @@ API Call Graph 기능은 Swagger 파일의 `x-invalidate-query-key` 확장 필�
       - 'GET_CHATS_CHATID_PROBLEMS($parameters.chat_id)'  # 채팅 문제
 ```
 
+**파라미터 참조 형식**
+
+| 파라미터 형식 | 설명 | 예시 |
+|---------------|------|------|
+| `$parameters.{name}` | Path parameter의 이름 | `$parameters.chat_id`, `$parameters.user_id` |
+| `$parameters.$query` | 쿼리 파라미터 묶음 (객체 형태로 querykey에 포함) | `$parameters.$query` |
+| `$requestBody` | Request payload body (Swagger 명세 이름과 일치) | `$requestBody` |
+| `$response` | Response에서 사용하는 값 | `$response` |
+
+> **참고**: 쿼리 파라미터와 request body는 특정 값을 명시하지 않고 객체 형태로 query key에 포함됩니다.
+
 **3. TanStack Query 옵션 설정**
 ```yaml
 # 캐시 설정 최적화
 /chats/init-options:
   get:
-    x-query-key: '[chats, init-options]'
+    x-query-key: 'GET_CHATS_INIT_OPTIONS()'
     x-stale-time: infinity          # 무한 캐시 유지
     
 /chats/{chat_id}/options:
   get:
-    x-query-key: '[chats, $parameters.chat_id, options]'
+    x-query-key: 'GET_CHATS_CHATID_OPTIONS($paramters.chat_id)'
     x-stale-time: infinity          # 무한 캐시 유지  
     x-gc-time: infinity             # 가비지 컬렉션 방지
 ```
@@ -639,8 +650,6 @@ const deleteChatMutation = useDeleteChatsByChatIdMutation({
 // 삭제 실행
 deleteChatMutation.mutate({
   chatId: 123,
-  kyInstance: undefined,
-  options: {}
 });
 ```
 
