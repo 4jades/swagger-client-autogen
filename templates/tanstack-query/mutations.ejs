@@ -74,7 +74,7 @@ export const <%= mutation.mutationHookName %> = (
         <% if (mutation.invalidateQueryKey.length) { %>
         onSuccess: (data, variables, context) => {
             <% for (const invalidateQueryKey of mutation.invalidateQueryKey) { %>
-            queryClient.invalidateQueries({ queryKey: <%~ `${moduleConfig.query.queryKeyObjectName}.${invalidateQueryKey}` %> });
+            queryClient.invalidateQueries({ queryKey: <%~ `${moduleConfig.query.queryKeyObjectName}.${invalidateQueryKey}` %>, exact: true });
             <% } %>
 
             options?.onSuccess?.(data, variables, context);

@@ -56,7 +56,7 @@ export { queries as <%~ moduleName %>Queries };
 *
 */
 export const <%~ query.queryHookName %> = <TData=<%~ routeConfig.response.dtoName %>>(
-    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"],
+    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"] = {},
     options?: Omit<UseQueryOptions<<%~ routeConfig.response.dtoName %>,DefaultError, TData>,'queryKey' | 'queryFn' >
 ) => {
     return useQuery({
@@ -80,7 +80,7 @@ export const <%~ query.queryHookName %> = <TData=<%~ routeConfig.response.dtoNam
 *
 */
 export const <%~ query.suspenseQueryHookName %> = <TData=<%~ routeConfig.response.dtoName %>>(
-    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"],
+    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"] = {},
     options?: Omit<UseQueryOptions<<%~ routeConfig.response.dtoName %>,DefaultError, TData>, 'queryKey' | 'queryFn' >
 ) => {
     return useSuspenseQuery({
