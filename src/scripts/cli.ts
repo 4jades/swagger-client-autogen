@@ -48,15 +48,15 @@ function runScript(scriptPath: string, args: string[]) {
 
 switch (command) {
   case 'init':
-    runScript(join(__dirname, 'scripts', 'init.js'), args);
+    runScript(join(__dirname, 'init.js'), args);
     break;
 
   case 'fetch':
-    runScript(join(__dirname, 'scripts', 'fetch-swagger.js'), args);
+    runScript(join(__dirname, 'fetch-swagger.js'), args);
     break;
 
   case 'generate':
-    runScript(join(__dirname, 'scripts', 'generate-all.js'), args);
+    runScript(join(__dirname, 'generate-all.js'), args);
     break;
 
   case '--help':

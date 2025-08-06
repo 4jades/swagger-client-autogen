@@ -4,7 +4,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsup && yarn postbuild",
-    "postbuild": "cp -r templates dist/ && cp -r types dist/ && cp -r utils dist/ && cp -r config-builders dist/ && cp scripts/*.js dist/scripts/",
+    "postbuild": "cp -r src/templates dist/",
     "build:watch": "tsup --watch"
   },
   "keywords": [],
@@ -19,7 +19,7 @@
     }
   },
   "bin": {
-    "swagger-client-autogen": "./dist/cli.js"
+    "swagger-client-autogen": "./dist/scripts/cli.js"
   },
   "files": ["dist/"],
   "devDependencies": {

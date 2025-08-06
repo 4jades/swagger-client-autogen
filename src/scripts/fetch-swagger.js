@@ -8,25 +8,33 @@ import { writeFileToPath } from '../utils/file';
 import { log } from '../utils/log';
 import { isUrl } from '../utils/url';
 
-function extractQueryKey(pathKey, tags, parameters) {
+function extractQueryKey(pathKey, parameters) {
   const pathSegments = pathKey.split('/').filter(Boolean);
-  const baseKey = tags?.[0] ?? 'data';
-  const queryKeyParts = [baseKey];
+
+  // 함수명 생성 (GET_CHATS_CHATID_PROBLEMS 형태)
+  const functionNameParts = ['GET'];
+  const functionArgs = [];
 
   for (const segment of pathSegments) {
     if (segment.startsWith('{') && segment.endsWith('}')) {
-      queryKeyParts.push(`$parameters.${segment.slice(1, -1)}`);
-    } else if (segment !== baseKey) {
-      queryKeyParts.push(segment);
+      const paramName = segment.slice(1, -1);
+      functionNameParts.push(paramName.toUpperCase());
+      functionArgs.push(`$parameters.${paramName}`);
+    } else {
+      functionNameParts.push(segment.toUpperCase());
     }
   }
 
   if (parameters?.some(p => p.in === 'query')) {
-    queryKeyParts.push('$parameters.$query');
+    // 쿼리 파라미터가 있는 경우
+    functionArgs.push('$parameters.$query');
   }
 
-  // 배열을 문자열로 변환
-  return `[${queryKeyParts.join(', ')}]`;
+  // 함수 호출 형태로 반환: GET_CHATS_CHATID_PROBLEMS($parameters.chat_id)
+  const functionName = functionNameParts.join('_');
+  const argsString = functionArgs.join(', ');
+
+  return `${functionName}(${argsString})`;
 }
 
 function injectQueryKey(operation, queryKey) {
@@ -152,14 +160,15 @@ if (!configPath) {
 // Config 파일 로드
 const loadConfig = async configPath => {
   try {
-    const absoluteConfigPath = path.resolve(process.cwd(), configPath);
-    const { default: config } = await import(`file://${absoluteConfigPath}`);
-    return config;
+    const configModule = await import(path.resolve(process.cwd(), configPath));
+    return configModule.config
   } catch (error) {
-    log.error(`Config 파일을 로드할 수 없습니다: ${configPath}`, error);
+    console.error(`❌ 설정 파일을 불러올 수 없습니다: ${configPath}`);
+    console.error(error.message);
     process.exit(1);
   }
 };
+
 
 const config = await loadConfig(configPath);
 

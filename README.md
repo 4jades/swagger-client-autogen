@@ -514,21 +514,22 @@ API Call Graph 기능은 Swagger 파일의 `x-invalidate-query-key` 확장 필�
 # fetch 명령어로 자동 생성되는 Query Key 예시
 /chats:
   get:
-    x-query-key: '[chats]'                    # 자동 생성
+    x-query-key: 'GET_CHATS()'                    # 자동 생성
     
 /chats/{chat_id}:
   get:
-    x-query-key: '[chats, $parameters.chat_id]'  # 자동 생성
+    x-query-key: 'GET_CHATS_CHATID($parameters.chat_id)'  # 자동 생성
     
 /chats/{chat_id}/messages:
   get:
-    x-query-key: '[chats, $parameters.chat_id, messages]'  # 자동 생성
+    x-query-key: 'GET_CHATS_CHATID_MESSAGES($parameters.chat_id)'  # 자동 생성
 ```
 
 **자동 생성 규칙:**
-- 경로 세그먼트를 기반으로 배열 형태로 생성
-- 경로 매개변수는 `$parameters.{param_name}` 형식으로 변환
-- 중첩된 리소스는 계층 구조를 유지하여 생성
+- HTTP 메서드와 경로를 기반으로 함수명 생성 (예: `GET_CHATS_CHATID_MESSAGES`)
+- 경로 매개변수는 함수 인수로 변환 (`$parameters.{param_name}`)
+- 쿼리 파라미터가 있는 경우 `$parameters.$query` 추가
+- 언더바(`_`)로 구분된 대문자 함수명 사용
 
 **2. 무효화 키 정의 (`x-invalidate-query-key`)**
 ```yaml
@@ -536,10 +537,10 @@ API Call Graph 기능은 Swagger 파일의 `x-invalidate-query-key` 확장 필�
 /chats/{chat_id}:
   delete:
     x-invalidate-query-key:
-      - '[chats]'                              # 전체 채팅 목록
-      - '[chats, $parameters.chat_id]'         # 특정 채팅
-      - '[chats, $parameters.chat_id, messages]'  # 채팅 메시지
-      - '[chats, $parameters.chat_id, problems]'  # 채팅 문제
+      - 'GET_CHATS()'                              # 전체 채팅 목록
+      - 'GET_CHATS_CHATID($parameters.chat_id)'    # 특정 채팅
+      - 'GET_CHATS_CHATID_MESSAGES($parameters.chat_id)'  # 채팅 메시지
+      - 'GET_CHATS_CHATID_PROBLEMS($parameters.chat_id)'  # 채팅 문제
 ```
 
 **3. TanStack Query 옵션 설정**
@@ -578,23 +579,23 @@ export const useDeleteChatsByChatIdMutation = (
     ...mutations.deleteChatsByChatId(),
     ...options,
     onSuccess: (data, variables, context) => {
-      // x-invalidate-query-key 기반 자동 무효화
-      queryClient.invalidateQueries({ 
-        queryKey: CHATS_QUERY_KEY.GET__CHATS(),
-        exact: true,
-      });
-      queryClient.invalidateQueries({
-        queryKey: CHATS_QUERY_KEY.GET__CHATS_CHATID(variables.chatId),
-        exact: true,
-      });
-      queryClient.invalidateQueries({
-        queryKey: CHATS_QUERY_KEY.GET__CHATS_CHATID_MESSAGES(variables.chatId),
-        exact: true,
-      });
-      queryClient.invalidateQueries({
-        queryKey: CHATS_QUERY_KEY.GET__CHATS_CHATID_PROBLEMS(variables.chatId),
-        exact: true,
-      });
+              // x-invalidate-query-key 기반 자동 무효화
+        queryClient.invalidateQueries({ 
+          queryKey: CHATS_QUERY_KEY.GET_CHATS(),
+          exact: true,
+        });
+        queryClient.invalidateQueries({
+          queryKey: CHATS_QUERY_KEY.GET_CHATS_CHATID(variables.chatId),
+          exact: true,
+        });
+        queryClient.invalidateQueries({
+          queryKey: CHATS_QUERY_KEY.GET_CHATS_CHATID_MESSAGES(variables.chatId),
+          exact: true,
+        });
+        queryClient.invalidateQueries({
+          queryKey: CHATS_QUERY_KEY.GET_CHATS_CHATID_PROBLEMS(variables.chatId),
+          exact: true,
+        });
 
       // 사용자 정의 onSuccess 콜백 실행
       options?.onSuccess?.(data, variables, context);

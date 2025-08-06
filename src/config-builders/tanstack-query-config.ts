@@ -1,8 +1,8 @@
+import type { RouteConfig } from '@/types/route-config';
+import type { ParsedRoute } from '@/types/swagger-typescript-api';
 import { camelCase, compact, findKey, pascalCase } from 'es-toolkit';
 import { produce } from 'immer';
 import { P, match } from 'ts-pattern';
-import type { RouteConfig } from 'types/route-config';
-import type { ParsedRoute } from 'types/swagger-typescript-api';
 import { pipe } from '../utils/fp';
 import { log } from '../utils/log';
 
@@ -121,18 +121,29 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
     setInvalidateQueryKey: (config: TanstackQueryConfig) => {
       const { raw } = route;
 
-      const getQueryKeyArgs = (queryKey: string) => {
-        return queryKey
-          .slice(1, -1)
-          .split(', ')
-          .map(arg =>
-            match(arg.trim())
-              .with('$parameters.$query', () => 'params')
-              .with(P.string.startsWith('$parameters.'), p => `variables.${camelCase(p.split('.').at(-1) ?? '')}`)
-              .with(P.string.startsWith('$payload.'), p => `data.${camelCase(p.split('.').at(-1) ?? '')}`)
-              .otherwise(() => null),
-          )
-          .filter(Boolean);
+      // 새로운 형태의 x-query-key 파싱: GET_CHATS_CHATID_PROBLEMS($parameters.chat_id)
+      const parseQueryKeyFunction = (queryKey: string) => {
+        const match = queryKey.match(/^([A-Z_]+)\(([^)]*)\)$/);
+        if (!match) {
+          log.warn(
+            `Invalid query key format: ${queryKey}. Expected format: GET_CHATS_CHATID_PROBLEMS($parameters.chat_id)`,
+          );
+          return null;
+        }
+
+        const [, functionName, argsString] = match;
+        const args = argsString ? argsString.split(',').map(arg => arg.trim()) : [];
+
+        return { functionName, args };
+      };
+
+      const resolveArgument = (arg: string) => {
+        return match(arg.trim())
+          .with('$parameters.$query', () => 'params')
+          .with(P.string.startsWith('$parameters.'), p => `variables.${camelCase(p.split('.').at(-1) ?? '')}`)
+          .with(P.string.startsWith('$payload.'), p => `data.${camelCase(p.split('.').at(-1) ?? '')}`)
+          .with(P.string.startsWith('$response.'), p => `data.${camelCase(p.split('.').at(-1) ?? '')}`)
+          .otherwise(() => null);
       };
 
       const findRequestByQueryKey = (route: ParsedRoute, queryKey: string) => {
@@ -155,17 +166,25 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
       const xInvalidateQueryKeys = raw['x-invalidate-query-key'];
 
       const invalidateQueryKeyCallExpression = xInvalidateQueryKeys.map(key => {
-        const request = findRequestByQueryKey(route, key);
+        // 새로운 형태 파싱
+        const parsed = parseQueryKeyFunction(key);
+        if (!parsed) {
+          return null;
+        }
 
+        const { functionName, args } = parsed;
+
+        // 함수 이름으로 해당 request 찾기
+        const request = findRequestByQueryKey(route, key);
         if (!request) {
           return null;
         }
 
-        const { path, method } = request;
+        // 인수들을 실제 변수로 변환
+        const resolvedArgs = args.map(resolveArgument).filter(Boolean);
 
-        const newArgs = getQueryKeyArgs(key);
-
-        return `${buildKeyConstantsName({ path, method })}(${newArgs.join(', ')})`;
+        // 함수명은 그대로 사용 (이미 올바른 형태)
+        return `${functionName}(${resolvedArgs.join(', ')})`;
       });
 
       return produce(config, draft => {
@@ -179,7 +198,7 @@ function buildKeyConstantsName({ path, method }: Pick<ParsedRoute['request'], 'p
   return (
     method &&
     path &&
-    `${method.toUpperCase()}_${path
+    `${method.toUpperCase()}${path
       .split('/')
       .map(segment =>
         segment.match(/\$?{/)

@@ -1,0 +1,2110 @@
+openapi: 3.1.0
+info:
+  title: edu-max BE
+  version: 0.0.1
+servers:
+  - url: /api/v1
+paths:
+  /chats/init-options:
+    get:
+      tags:
+        - chats
+      summary: Init Options
+      description: 클라이언트가 채팅 생성 시 렌더링할 옵션 UI 컴포넌트 목록을 제공합니다.
+      operationId: init_options_chats_init_options_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitOptionsResponse'
+      x-query-key: '[chats, init-options]'
+      x-stale-time: infinity
+  /chats:
+    get:
+      tags:
+        - chats
+      summary: Get Chats
+      description: 모든 채팅 목록을 반환합니다.
+      operationId: get_chats_chats_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ChatResponse'
+                type: array
+                title: Response Get Chats Chats Get
+      x-query-key: '[chats]'
+    post:
+      tags:
+        - chats
+      summary: Create Chat
+      description: 새로운 채팅을 생성합니다.
+      operationId: create_chat_chats_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCreateRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-invalidate-query-key:
+        - '[chats]'
+  /chats/{chat_id}:
+    get:
+      tags:
+        - chats
+      summary: Get Chat
+      description: 특정 채팅의 정보를 반환합니다.
+      operationId: get_chat_chats__chat_id__get
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: 채팅방 ID
+            title: Chat Id
+          description: 채팅방 ID
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '404':
+          description: 해당 채팅이 존재하지 않을 경우 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-query-key: '[chats, $parameters.chat_id]'
+    patch:
+      tags:
+        - chats
+      summary: Update Chat Title
+      description: 특정 채팅의 제목을 수정합니다.
+      operationId: update_chat_title_chats__chat_id__patch
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: 채팅방 ID
+            title: Chat Id
+          description: 채팅방 ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatTitleUpdateRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '404':
+          description: 해당 채팅이 존재하지 않을 경우 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-invalidate-query-key:
+        - '[chats]'
+        - '[chats, $parameters.chat_id]'
+    delete:
+      tags:
+        - chats
+      summary: Delete Chat
+      description: 특정 채팅을 삭제합니다.
+      operationId: delete_chat_chats__chat_id__delete
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: 채팅방 ID
+            title: Chat Id
+          description: 채팅방 ID
+      responses:
+        '204':
+          description: Successful Response
+        '404':
+          description: 해당 채팅이 존재하지 않을 경우 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-invalidate-query-key:
+        - '[chats]'
+        - '[chats, $parameters.chat_id]'
+        - '[chats, $parameters.chat_id, messages]'
+        - '[chats, $parameters.chat_id, problems]'
+  /chats/{chat_id}/messages:
+    get:
+      tags:
+        - chats
+      summary: Get Messages
+      description: 특정 채팅의 메시지 목록을 반환합니다.
+      operationId: get_messages_chats__chat_id__messages_get
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: 채팅방 ID
+            title: Chat Id
+          description: 채팅방 ID
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessagesListResponse'
+        '404':
+          description: 해당 채팅이 존재하지 않을 경우 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-query-key: '[chats, $parameters.chat_id, messages]'
+    post:
+      tags:
+        - chats
+      summary: Send Message
+      description: 특정 채팅에 메세지를 전송합니다.
+      operationId: send_message_chats__chat_id__messages_post
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: 채팅방 ID
+            title: Chat Id
+          description: 채팅방 ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageCreateRequest'
+      responses:
+        '200':
+          description: SSE 이벤트 메시지 스트림
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |
+                  event: message_start
+                  data: {
+                    "id": -1,
+                    "chat_id": 1,
+                    "created_at": "현재시간",
+                    "parent_id": -1,
+                    "type": "message",
+                    "author": {
+                      "role": "assistant",
+                      "user_id": -1
+                    },
+                    "content": {
+                      "m_type": "text",
+                      "value": {
+                        "text": ""
+                      }
+                    }
+                  }
+
+                  event: message_delta
+                  data: {"text": "string"}
+
+                  event: message_end
+        '404':
+          description: 해당 채팅이 존재하지 않을 경우 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-invalidate-query-key:
+        - '[chats, $parameters.chat_id, messages]'
+  /chats/{chat_id}/options:
+    get:
+      tags:
+        - chats
+      summary: Get Options
+      description: 특정 채팅의 옵션 목록을 반환합니다.
+      operationId: get_options_chats__chat_id__options_get
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: 채팅방 ID
+            title: Chat Id
+          description: 채팅방 ID
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatOptionsListResponse'
+        '404':
+          description: 해당 채팅이 존재하지 않을 경우 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-query-key: '[chats, $parameters.chat_id, options]'
+      x-stale-time: infinity
+      x-gc-time: infinity
+  /chats/{chat_id}/problems:
+    get:
+      tags:
+        - chats
+      summary: Get Chat Problems
+      description: |-
+        특정 채팅의 문제 목록을 조회합니다.
+
+        Args:
+            service (ChatProblemService): 채팅 문제 서비스 객체
+
+        Returns:
+            List[ChatProblemResponse]: 채팅 문제 목록
+
+        Raises:
+            ChatNotFoundException: 채팅을 찾을 수 없는 경우
+      operationId: get_chat_problems_chats__chat_id__problems_get
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: 채팅방 ID
+            title: Chat Id
+          description: 채팅방 ID
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatProblemResponse'
+                title: Response Get Chat Problems Chats  Chat Id  Problems Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-query-key: '[chats, $parameters.chat_id, problems]'
+  /chats/{chat_id}/problems/{problem_id}:
+    get:
+      tags:
+        - chats
+      summary: Get Chat Problem
+      description: |-
+        특정 채팅의 특정 문제 상세 정보를 조회합니다.
+
+        Args:
+            service (ChatProblemService): 채팅 문제 서비스 객체
+            problem_id (int): 문제 ID
+
+        Returns:
+            ChatProblemDetailResponse: 문제 상세 정보
+
+        Raises:
+            ChatNotFoundException: 채팅을 찾을 수 없는 경우
+            ChatProblemNotFoundException: 문제를 찾을 수 없는 경우
+      operationId: get_chat_problem_chats__chat_id__problems__problem_id__get
+      parameters:
+        - name: problem_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: 문제 번호
+            title: Problem Id
+          description: 문제 번호
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: 채팅방 ID
+            title: Chat Id
+          description: 채팅방 ID
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatProblemDetailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-query-key: '[chats, $parameters.chat_id, problems, $parameters.problem_id]'
+  /chats/{chat_id}/problems/{problem_id}/submit:
+    post:
+      tags:
+        - chats
+      summary: Submit Chat Problem
+      description: |-
+        특정 채팅의 특정 문제에 대한 답안을 제출합니다.
+
+        Args:
+            problem_id (int): 문제 ID
+            submit (ChatProblemSubmitRequest): 답안 제출 요청 데이터
+            service (ChatProblemService): 채팅 문제 서비스 객체
+
+        Returns:
+            ChatProblemSubmitResponse: 답안 제출 결과
+
+        Raises:
+            ChatNotFoundException: 채팅을 찾을 수 없는 경우
+            ChatProblemNotFoundException: 문제를 찾을 수 없는 경우
+            AlreadySolvedException: 이미 해결된 문제인 경우
+      operationId: submit_chat_problem_chats__chat_id__problems__problem_id__submit_post
+      parameters:
+        - name: problem_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: 문제 번호
+            title: Problem Id
+          description: 문제 번호
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: 채팅방 ID
+            title: Chat Id
+          description: 채팅방 ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatProblemSubmitRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatProblemSubmitResponse'
+        '400':
+          description: 이미 정답/복습 처리된 문제에 답안을 다시 제출할 때 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-invalidate-query-key:
+        - '[chats, $parameters.chat_id, problems]'
+        - '[chats, $parameters.chat_id, problems, $parameters.problem_id]'
+  /problems:
+    get:
+      tags:
+        - problems
+      summary: Get Problems
+      description: 과목명과 학년 정보를 받아 해당하는 문제 목록을 반환합니다.
+      operationId: get_problems_problems_get
+      deprecated: true
+      parameters:
+        - name: subject
+          in: query
+          required: true
+          schema:
+            type: string
+            description: 과목명
+            title: Subject
+          description: 과목명
+        - name: grade
+          in: query
+          required: true
+          schema:
+            type: integer
+            description: 학년
+            title: Grade
+          description: 학년
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProblemResponse'
+                title: Response Get Problems Problems Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-query-key: '[problems, $parameters.$query]'
+  /problems/{problem_id}:
+    get:
+      tags:
+        - problems
+      summary: Get Problem
+      description: problem_id에 해당하는 문제 정보를 반환합니다.
+      operationId: get_problem_problems__problem_id__get
+      parameters:
+        - name: problem_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            title: Problem Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+        '404':
+          description: 해당 문제가 존재하지 않을 경우 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-query-key: '[problems, $parameters.problem_id]'
+  /problems/{problem_id}/submit:
+    post:
+      tags:
+        - problems
+      summary: Submit Problem
+      description: 답을 제출하고 정답 여부를 반환합니다.
+      operationId: submit_problem_problems__problem_id__submit_post
+      deprecated: true
+      parameters:
+        - name: problem_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            title: Problem Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/SingleChoiceAnswer'
+                - $ref: '#/components/schemas/MultipleChoiceAnswer'
+                - $ref: '#/components/schemas/SingleShortAnswer'
+              discriminator:
+                propertyName: type
+                mapping:
+                  단일선택 객관식: '#/components/schemas/SingleChoiceAnswer'
+                  다중선택 객관식: '#/components/schemas/MultipleChoiceAnswer'
+                  단일응답 주관식: '#/components/schemas/SingleShortAnswer'
+              title: Request
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemSubmitResponse'
+        '404':
+          description: 해당 문제가 존재하지 않을 경우 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /uploads:
+    post:
+      tags:
+        - upload
+      summary: Create Upload Url
+      description: 파일 업로드 위한 url을 반환합니다.
+      operationId: create_upload_url_uploads_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '400':
+          description: 지원하지 않는 mime type 요청 시 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users:
+    get:
+      tags:
+        - users
+      summary: Get Users
+      description: 전체 사용자 목록 조회
+      operationId: get_users_users_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+                type: array
+                title: Response Get Users Users Get
+      x-query-key: '[users]'
+    post:
+      tags:
+        - users
+      summary: Create User
+      description: 신규 사용자 생성
+      operationId: create_user_users_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-invalidate-query-key:
+        - '[users]'
+  /users/{user_id}:
+    get:
+      tags:
+        - users
+      summary: Get User
+      description: 특정 사용자 정보 조회
+      operationId: get_user_users__user_id__get
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: 유저 ID
+            title: User Id
+          description: 유저 ID
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '404':
+          description: 사용자를 찾을 수 없는 경우
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-query-key: '[users, $parameters.user_id]'
+    delete:
+      tags:
+        - users
+      summary: Delete User
+      description: 특정 사용자 삭제
+      operationId: delete_user_users__user_id__delete
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: 유저 ID
+            title: User Id
+          description: 유저 ID
+      responses:
+        '204':
+          description: Successful Response
+        '404':
+          description: 사용자를 찾을 수 없는 경우
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-invalidate-query-key:
+        - '[users]'
+        - '[users, $parameters.user_id]'
+  /users/{user_id}/unknown-concepts:
+    get:
+      tags:
+        - users
+      summary: Get Unknown Concepts List
+      description: 사용자의 이해하지 못한 개념 목록 조회
+      operationId: get_unknown_concepts_list_users__user_id__unknown_concepts_get
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: 유저 ID
+            title: User Id
+          description: 유저 ID
+        - name: subject
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: 'null'
+            description: 과목 필터
+            title: Subject
+          description: 과목 필터
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UnknownConceptReadResponse'
+                title: >-
+                  Response Get Unknown Concepts List Users  User Id  Unknown
+                  Concepts Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-query-key: '[users, $parameters.user_id, unknown-concepts, $parameters.$query]'
+    post:
+      tags:
+        - users
+      summary: Upsert Unknown Concept
+      description: 사용자의 이해하지 못한 개념 생성 또는 갱신
+      operationId: upsert_unknown_concept_users__user_id__unknown_concepts_post
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: 유저 ID
+            title: User Id
+          description: 유저 ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnknownConceptCreateRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnknownConceptReadResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+        - users
+      summary: Delete Unknown Concept
+      description: 사용자의 이해하지 못한 개념 삭제
+      operationId: delete_unknown_concept_users__user_id__unknown_concepts_delete
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: 유저 ID
+            title: User Id
+          description: 유저 ID
+        - name: subject
+          in: query
+          required: false
+          schema:
+            type: string
+            description: 과목명으로 필터링
+            title: Subject
+          description: 과목명으로 필터링
+        - name: key_concept
+          in: query
+          required: false
+          schema:
+            type: string
+            description: 주요 개념으로 필터링
+            title: Key Concept
+          description: 주요 개념으로 필터링
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    ChatCreateRequest:
+      properties:
+        title:
+          type: string
+          title: Title
+          description: 채팅 제목
+        subject:
+          type: string
+          title: Subject
+          description: 과목명
+        grade:
+          type: string
+          title: Grade
+          description: 학년
+      type: object
+      required:
+        - title
+        - subject
+        - grade
+      title: ChatCreateRequest
+      description: 새 채팅방 생성을 위한 요청 스키마
+    ChatMessageResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: 메시지 ID
+        chat_id:
+          type: integer
+          title: Chat Id
+          description: 채팅방 ID
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+          description: 메시지 생성 일시
+        parent_id:
+          type: integer
+          title: Parent Id
+          description: 부모 메시지 ID (없으면 0 등 기본값)
+        type:
+          type: string
+          const: chat
+          title: Type
+          description: chat 메시지 타입
+        author:
+          $ref: '#/components/schemas/MessageAuthor'
+          description: 메시지 작성 주체
+        content:
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TextContent'
+              - $ref: '#/components/schemas/ProblemLinkContent'
+              - $ref: '#/components/schemas/ImagesContent'
+            discriminator:
+              propertyName: m_type
+              mapping:
+                images: '#/components/schemas/ImagesContent'
+                problem_link: '#/components/schemas/ProblemLinkContent'
+                text: '#/components/schemas/TextContent'
+          type: array
+          title: Content
+          description: chat 메시지 정보
+        metadata:
+          $ref: '#/components/schemas/MessageMetadata-Output'
+          description: 메시지 추가 정보
+      type: object
+      required:
+        - id
+        - chat_id
+        - created_at
+        - parent_id
+        - type
+        - author
+        - content
+        - metadata
+      title: ChatMessageResponse
+    ChatOptionResponse:
+      properties:
+        key:
+          type: string
+          title: Key
+          description: 옵션 키
+        display_name:
+          type: string
+          title: Display Name
+          description: 옵션 표시 이름
+        value:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            - type: integer
+            - type: number
+            - type: boolean
+            - type: string
+          title: Value
+          description: 옵션 값
+      type: object
+      required:
+        - key
+        - display_name
+        - value
+      title: ChatOptionResponse
+    ChatOptionsListResponse:
+      properties:
+        chat_options:
+          items:
+            $ref: '#/components/schemas/ChatOptionResponse'
+          type: array
+          title: Chat Options
+          description: 채팅 옵션 목록
+      type: object
+      required:
+        - chat_options
+      title: ChatOptionsListResponse
+    ChatProblemDetailResponse:
+      properties:
+        number:
+          type: integer
+          title: Number
+          description: 문제 번호
+        status:
+          $ref: '#/components/schemas/ProblemStatus'
+          description: 풀이 상태
+        last_answer:
+          anyOf:
+            - type: string
+            - type: integer
+            - type: 'null'
+          title: Last Answer
+          description: 직전 제출 답안
+        problem_info:
+          $ref: '#/components/schemas/ProblemDetailResponse'
+          description: 문제 정보
+      type: object
+      required:
+        - number
+        - status
+        - last_answer
+        - problem_info
+      title: ChatProblemDetailResponse
+    ChatProblemResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: 문제 ID
+        number:
+          type: integer
+          title: Number
+          description: 문제 번호
+        status:
+          $ref: '#/components/schemas/ProblemStatus'
+          description: 풀이 상태
+      type: object
+      required:
+        - id
+        - number
+        - status
+      title: ChatProblemResponse
+    ChatProblemSubmitRequest:
+      oneOf:
+        - $ref: '#/components/schemas/SingleChoiceAnswer'
+        - $ref: '#/components/schemas/MultipleChoiceAnswer'
+        - $ref: '#/components/schemas/SingleShortAnswer'
+      title: ChatProblemSubmitRequest
+      discriminator:
+        propertyName: type
+        mapping:
+          다중선택 객관식: '#/components/schemas/MultipleChoiceAnswer'
+          단일선택 객관식: '#/components/schemas/SingleChoiceAnswer'
+          단일응답 주관식: '#/components/schemas/SingleShortAnswer'
+    ChatProblemSubmitResponse:
+      properties:
+        is_correct:
+          type: boolean
+          title: Is Correct
+          description: 정답 여부
+      type: object
+      required:
+        - is_correct
+      title: ChatProblemSubmitResponse
+    ChatResponse:
+      properties:
+        title:
+          type: string
+          title: Title
+          description: 채팅방 제목
+        subject:
+          type: string
+          title: Subject
+          description: 과목명
+        id:
+          type: integer
+          title: Id
+          description: 채팅방 ID
+        has_problem:
+          type: boolean
+          title: Has Problem
+          description: 문제 존재 여부
+      type: object
+      required:
+        - title
+        - subject
+        - id
+        - has_problem
+      title: ChatResponse
+      description: 채팅방 조회 응답 스키마
+    ChatTitleUpdateRequest:
+      properties:
+        title:
+          type: string
+          title: Title
+          description: 새 채팅 제목
+      type: object
+      required:
+        - title
+      title: ChatTitleUpdateRequest
+      description: 채팅방 제목 수정 요청 스키마
+    CheckboxComponent:
+      properties:
+        ui_type:
+          type: string
+          const: checkbox
+          title: Ui Type
+          description: 다중 선택 컴포넌트
+        key:
+          type: string
+          title: Key
+          description: 요청에 사용할 key
+        display_name:
+          type: string
+          title: Display Name
+          description: 화면에 표시될 정보
+        value:
+          items:
+            $ref: '#/components/schemas/OptionValue'
+          type: array
+          title: Value
+          description: 다중 선택을 위한 옵션 리스트
+      type: object
+      required:
+        - ui_type
+        - key
+        - display_name
+        - value
+      title: CheckboxComponent
+    DateContent:
+      properties:
+        m_type:
+          type: string
+          const: date
+          title: M Type
+          description: 시스템 날짜 메시지 타입
+        value:
+          $ref: '#/components/schemas/DateValue'
+          description: 날짜 메시지 값
+      type: object
+      required:
+        - m_type
+        - value
+      title: DateContent
+    DateValue:
+      properties:
+        text:
+          type: string
+          title: Text
+          description: YYYY-MM-DD 형식의 날짜 문자열
+      type: object
+      required:
+        - text
+      title: DateValue
+    ErrorResponse:
+      properties:
+        detail:
+          type: string
+          title: Detail
+      type: object
+      required:
+        - detail
+      title: ErrorResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ImagesContent:
+      properties:
+        m_type:
+          type: string
+          const: images
+          title: M Type
+          description: 이미지 메세지 타입
+        value:
+          $ref: '#/components/schemas/ImagesValue'
+          description: 이미지 메세지 값
+      type: object
+      required:
+        - m_type
+        - value
+      title: ImagesContent
+    ImagesValue:
+      properties:
+        sources:
+          items:
+            type: string
+          type: array
+          title: Sources
+          description: 이미지 URL
+      type: object
+      required:
+        - sources
+      title: ImagesValue
+    InitOptionsResponse:
+      properties:
+        components:
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/SelectComponent'
+              - $ref: '#/components/schemas/SwitchComponent'
+              - $ref: '#/components/schemas/SliderComponent'
+              - $ref: '#/components/schemas/CheckboxComponent'
+              - $ref: '#/components/schemas/RadioComponent'
+              - $ref: '#/components/schemas/TextInputComponent'
+            discriminator:
+              propertyName: ui_type
+              mapping:
+                checkbox: '#/components/schemas/CheckboxComponent'
+                radio: '#/components/schemas/RadioComponent'
+                select: '#/components/schemas/SelectComponent'
+                slider: '#/components/schemas/SliderComponent'
+                switch: '#/components/schemas/SwitchComponent'
+                text_input: '#/components/schemas/TextInputComponent'
+          type: array
+          title: Components
+          description: 채팅 옵션 컴포넌트 리스트
+      type: object
+      required:
+        - components
+      title: InitOptionsResponse
+    MessageAuthor:
+      properties:
+        role:
+          $ref: '#/components/schemas/MessageRole'
+          description: 메시지 작성 주체 (assistant/user 등)
+        user_id:
+          type: integer
+          title: User Id
+          description: 사용자 ID (또는 0 등)
+      type: object
+      required:
+        - role
+        - user_id
+      title: MessageAuthor
+    MessageCreateRequest:
+      properties:
+        content:
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TextContent'
+              - $ref: '#/components/schemas/ProblemLinkContent'
+              - $ref: '#/components/schemas/ImagesContent'
+            discriminator:
+              propertyName: m_type
+              mapping:
+                images: '#/components/schemas/ImagesContent'
+                problem_link: '#/components/schemas/ProblemLinkContent'
+                text: '#/components/schemas/TextContent'
+          type: array
+          title: Content
+          description: 메시지 정보
+        metadata:
+          $ref: '#/components/schemas/MessageMetadata-Input'
+          description: 메시지 추가 정보
+      type: object
+      required:
+        - content
+        - metadata
+      title: MessageCreateRequest
+    MessageMetadata-Input:
+      properties:
+        tool:
+          anyOf:
+            - $ref: '#/components/schemas/ToolInfo'
+            - type: 'null'
+          description: 모델이 사용한 툴카드 정보
+        problem_recommended:
+          anyOf:
+            - $ref: '#/components/schemas/ProblemRecommendedValue'
+            - type: 'null'
+          description: 추천 문제 정보
+        system_hints:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/SystemHint'
+              type: array
+            - type: 'null'
+          title: System Hints
+          description: 채팅 전송 시 특정 기능 플래그 포함 여부
+      type: object
+      title: MessageMetadata
+    MessageMetadata-Output:
+      properties:
+        tool:
+          anyOf:
+            - $ref: '#/components/schemas/ToolInfo'
+            - type: 'null'
+          description: 모델이 사용한 툴카드 정보
+        problem_recommended:
+          anyOf:
+            - $ref: '#/components/schemas/ProblemRecommendedValue'
+            - type: 'null'
+          description: 추천 문제 정보
+        system_hints:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/SystemHint'
+              type: array
+            - type: 'null'
+          title: System Hints
+          description: 채팅 전송 시 특정 기능 플래그 포함 여부
+      type: object
+      title: MessageMetadata
+    MessageRole:
+      type: string
+      enum:
+        - user
+        - assistant
+        - system
+      title: MessageRole
+      description: |-
+        메시지 작성자의 역할을 정의하는 열거형 클래스입니다.
+
+        Attributes:
+            USER: 사용자가 작성한 메시지
+            ASSISTANT: AI 어시스턴트가 작성한 메시지
+            SYSTEM: 시스템이 작성한 메시지
+    MessagesListResponse:
+      properties:
+        data:
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/ChatMessageResponse'
+              - $ref: '#/components/schemas/SystemMessageResponse'
+            discriminator:
+              propertyName: type
+              mapping:
+                chat: '#/components/schemas/ChatMessageResponse'
+                system: '#/components/schemas/SystemMessageResponse'
+          type: array
+          title: Data
+          description: 메시지 목록
+      type: object
+      required:
+        - data
+      title: MessagesListResponse
+    ModelToolType:
+      type: string
+      enum:
+        - eng_voca_basic
+        - eng_voca_additional
+        - eng_grammar_basic
+        - eng_grammar_additional
+        - eng_grammar_comparison
+        - eng_translation
+        - eng_proofreading
+        - eng_answer_included
+        - eng_recommendation
+        - eng_completion_feedback
+        - math_learning_objective
+        - math_completion_feedback
+        - math_concept
+        - math_quiz
+        - math_stepwise_solution
+        - math_solution_demonstration
+        - math_recommend_problem
+      title: ModelToolType
+      description: |-
+        AI 모델이 사용하는 도구의 타입을 정의하는 열거형 클래스입니다.
+
+        Attributes:
+            # English
+            ENG_VOCA_BASIC: 기본 영어 어휘 도구
+            ENG_VOCA_ADDITIONAL: 추가 영어 어휘 도구
+            ENG_GRAMMAR_BASIC: 기본 영어 문법 도구
+            ENG_GRAMMAR_ADDITIONAL: 추가 영어 문법 도구
+            ENG_GRAMMAR_COMPARISON: 영어 문법 비교 도구
+            ENG_TRANSLATION: 영어 번역 도구
+            ENG_PROOFREADING: 영어 교정 도구
+            ENG_ANSWER_INCLUDED: 영어 답안 포함 도구
+            ENG_RECOMMENDATION: 영어 문제 추천
+            ENG_COMPLETION_FEEDBACK: 영어 문제 완료에 대한 피드백
+
+            # Math
+            MATH_LEARNING_OBJECTIVE: 수학 학습 목표 도구
+            MATH_COMPLETION_FEEDBACK: 수학 완료 피드백 도구
+            MATH_CONCEPT: 수학 개념 도구
+            MATH_QUIZ: 수학 퀴즈 도구
+            MATH_STEPWISE_SOLUTION: 수학 단계별 풀이 도구
+            MATH_SOLUTION_DEMONSTRATION: 수학 풀이 시연 도구
+            MATH_RECOMMENDED_PROBLEM: 수학 문제 추천 도구
+    MultipleChoiceAnswer:
+      properties:
+        type:
+          type: string
+          const: 다중선택 객관식
+          title: Type
+          description: 답변 타입
+        answer:
+          items:
+            type: integer
+          type: array
+          title: Answer
+          description: 정답 번호 목록
+      type: object
+      required:
+        - type
+        - answer
+      title: MultipleChoiceAnswer
+    OptionValue:
+      properties:
+        display_name:
+          type: string
+          title: Display Name
+          description: 선택지 항목명
+        key:
+          type: string
+          title: Key
+          description: 요청에 사용할 key
+      type: object
+      required:
+        - display_name
+        - key
+      title: OptionValue
+    ProblemDetailResponse:
+      oneOf:
+        - $ref: '#/components/schemas/SingleChoiceProblemDetail'
+        - $ref: '#/components/schemas/SingleShortAnswerProblemDetail'
+      title: ProblemDetailResponse
+      discriminator:
+        propertyName: type
+        mapping:
+          단일선택 객관식: '#/components/schemas/SingleChoiceProblemDetail'
+          단일응답 주관식: '#/components/schemas/SingleShortAnswerProblemDetail'
+    ProblemLinkContent:
+      properties:
+        m_type:
+          type: string
+          const: problem_link
+          title: M Type
+          description: 문제 링크 메세지 타입
+        value:
+          $ref: '#/components/schemas/ProblemLinkValue'
+          description: 문제 링크 메세지 값
+      type: object
+      required:
+        - m_type
+        - value
+      title: ProblemLinkContent
+    ProblemLinkValue:
+      properties:
+        problem_id:
+          type: integer
+          title: Problem Id
+          description: 문제 ID
+      type: object
+      required:
+        - problem_id
+      title: ProblemLinkValue
+    ProblemOption:
+      properties:
+        key:
+          type: integer
+          title: Key
+          description: 보기 번호(1, 2, 3, ...)
+        value:
+          type: string
+          title: Value
+          description: 보기 내용
+      type: object
+      required:
+        - key
+        - value
+      title: ProblemOption
+    ProblemRecommendedValue:
+      properties:
+        problem_id:
+          type: integer
+          title: Problem Id
+          description: 추천 문제 ID
+      type: object
+      required:
+        - problem_id
+      title: ProblemRecommendedValue
+    ProblemResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: 문제 ID
+      type: object
+      required:
+        - id
+      title: ProblemResponse
+    ProblemStatus:
+      type: string
+      enum:
+        - 풀지 않음
+        - 정답
+        - 오답
+        - 복습 완료
+      title: ProblemStatus
+      description: |-
+        문제의 풀이 상태를 정의하는 열거형 클래스입니다.
+
+        Attributes:
+            UNSOLVED: 풀지 않은 상태
+            CORRECT: 정답을 맞춘 상태
+            WRONG: 오답을 제출한 상태
+            REVIEWED: 복습을 완료한 상태
+    ProblemSubmitResponse:
+      properties:
+        is_correct:
+          type: boolean
+          title: Is Correct
+          description: 정답 여부
+      type: object
+      required:
+        - is_correct
+      title: ProblemSubmitResponse
+    RadioComponent:
+      properties:
+        ui_type:
+          type: string
+          const: radio
+          title: Ui Type
+          description: 단일 선택 컴포넌트
+        key:
+          type: string
+          title: Key
+          description: 요청에 사용할 key
+        display_name:
+          type: string
+          title: Display Name
+          description: 화면에 표시될 정보
+        value:
+          items:
+            $ref: '#/components/schemas/OptionValue'
+          type: array
+          title: Value
+          description: 단일 선택을 위한 옵션 리스트
+      type: object
+      required:
+        - ui_type
+        - key
+        - display_name
+        - value
+      title: RadioComponent
+    SelectComponent:
+      properties:
+        ui_type:
+          type: string
+          const: select
+          title: Ui Type
+          description: 단일 선택 목록 컴포넌트
+        key:
+          type: string
+          title: Key
+          description: 요청에 사용할 key
+        display_name:
+          type: string
+          title: Display Name
+          description: 화면에 표시될 정보
+        value:
+          items:
+            $ref: '#/components/schemas/OptionValue'
+          type: array
+          title: Value
+          description: 단일 선택을 위한 옵션 리스트
+      type: object
+      required:
+        - ui_type
+        - key
+        - display_name
+        - value
+      title: SelectComponent
+    SingleChoiceAnswer:
+      properties:
+        type:
+          type: string
+          const: 단일선택 객관식
+          title: Type
+          description: 답변 타입
+        answer:
+          type: integer
+          title: Answer
+          description: 정답 번호
+      type: object
+      required:
+        - type
+        - answer
+      title: SingleChoiceAnswer
+    SingleChoiceProblemContent:
+      properties:
+        subject:
+          type: string
+          title: Subject
+          description: 문제 과목 정보
+        category:
+          type: string
+          title: Category
+          description: 문제 카테고리
+        grade:
+          type: integer
+          title: Grade
+          description: 학년
+        level:
+          type: integer
+          title: Level
+          description: 난이도
+        instruction:
+          type: string
+          title: Instruction
+          description: 문제 지시사항
+        passage:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Passage
+          description: 문제 지문
+        image:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Image
+          description: 문제 이미지 URL
+        options:
+          items:
+            $ref: '#/components/schemas/ProblemOption'
+          type: array
+          title: Options
+          description: 보기 목록 (객관식 문제만 존재)
+      type: object
+      required:
+        - subject
+        - category
+        - grade
+        - level
+        - instruction
+      title: SingleChoiceProblemContent
+    SingleChoiceProblemDetail:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: 문제 ID
+        type:
+          type: string
+          const: 단일선택 객관식
+          title: Type
+          description: 단일선택 객관식
+        content:
+          $ref: '#/components/schemas/SingleChoiceProblemContent'
+          description: 문제 상세 정보
+      type: object
+      required:
+        - id
+        - type
+        - content
+      title: SingleChoiceProblemDetail
+    SingleShortAnswer:
+      properties:
+        type:
+          type: string
+          const: 단일응답 주관식
+          title: Type
+          description: 답변 타입
+        answer:
+          type: string
+          title: Answer
+          description: 정답 단어
+      type: object
+      required:
+        - type
+        - answer
+      title: SingleShortAnswer
+    SingleShortAnswerProblemContent:
+      properties:
+        subject:
+          type: string
+          title: Subject
+          description: 문제 과목 정보
+        category:
+          type: string
+          title: Category
+          description: 문제 카테고리
+        grade:
+          type: integer
+          title: Grade
+          description: 학년
+        level:
+          type: integer
+          title: Level
+          description: 난이도
+        instruction:
+          type: string
+          title: Instruction
+          description: 문제 지시사항
+        passage:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Passage
+          description: 문제 지문
+        image:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Image
+          description: 문제 이미지 URL
+      type: object
+      required:
+        - subject
+        - category
+        - grade
+        - level
+        - instruction
+      title: SingleShortAnswerProblemContent
+    SingleShortAnswerProblemDetail:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: 문제 ID
+        type:
+          type: string
+          const: 단일응답 주관식
+          title: Type
+          description: 단일응답 주관식
+        content:
+          $ref: '#/components/schemas/SingleShortAnswerProblemContent'
+          description: 문제 상세 정보
+      type: object
+      required:
+        - id
+        - type
+        - content
+      title: SingleShortAnswerProblemDetail
+    SliderComponent:
+      properties:
+        ui_type:
+          type: string
+          const: slider
+          title: Ui Type
+          description: 슬라이더 컴포넌트
+        key:
+          type: string
+          title: Key
+          description: 요청에 사용할 key
+        display_name:
+          type: string
+          title: Display Name
+          description: 화면에 표시될 정보
+        value:
+          $ref: '#/components/schemas/SliderValue'
+          description: 슬라이더 정보
+      type: object
+      required:
+        - ui_type
+        - key
+        - display_name
+        - value
+      title: SliderComponent
+    SliderValue:
+      properties:
+        min:
+          anyOf:
+            - type: integer
+            - type: number
+          title: Min
+          description: 슬라이더 최솟값
+        max:
+          anyOf:
+            - type: integer
+            - type: number
+          title: Max
+          description: 슬라이더 최댓값
+        step:
+          anyOf:
+            - type: integer
+            - type: number
+          title: Step
+          description: 슬라이더 단위
+      type: object
+      required:
+        - min
+        - max
+        - step
+      title: SliderValue
+    SwitchComponent:
+      properties:
+        ui_type:
+          type: string
+          const: switch
+          title: Ui Type
+          description: 스위치 컴포넌트
+        key:
+          type: string
+          title: Key
+          description: 요청에 사용할 key
+        display_name:
+          type: string
+          title: Display Name
+          description: 화면에 표시될 정보
+      type: object
+      required:
+        - ui_type
+        - key
+        - display_name
+      title: SwitchComponent
+    SystemHint:
+      type: string
+      enum:
+        - quiz_button
+      title: SystemHint
+      description: |-
+        시스템 힌트 플래그를 정의하는 열거형 클래스입니다.
+
+        Attributes:
+            QUIZ_BUTTON: 퀴즈 버튼 표시 여부
+    SystemMessageResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: 메시지 ID
+        chat_id:
+          type: integer
+          title: Chat Id
+          description: 채팅방 ID
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+          description: 메시지 생성 일시
+        parent_id:
+          type: integer
+          title: Parent Id
+          description: 부모 메시지 ID (없으면 0 등 기본값)
+        type:
+          type: string
+          const: system
+          title: Type
+          description: system 메시지 타입
+        author:
+          $ref: '#/components/schemas/MessageAuthor'
+          description: 메시지 작성 주체
+        content:
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/DateContent'
+            discriminator:
+              propertyName: m_type
+              mapping:
+                date: '#/components/schemas/DateContent'
+          type: array
+          title: Content
+          description: system 메시지 정보
+        metadata:
+          $ref: '#/components/schemas/MessageMetadata-Output'
+          description: 메시지 추가 정보
+      type: object
+      required:
+        - id
+        - chat_id
+        - created_at
+        - parent_id
+        - type
+        - author
+        - content
+        - metadata
+      title: SystemMessageResponse
+    TextContent:
+      properties:
+        m_type:
+          type: string
+          const: text
+          title: M Type
+          description: 텍스트 타입
+        value:
+          $ref: '#/components/schemas/TextValue'
+          description: 텍스트 타입 필드
+      type: object
+      required:
+        - m_type
+        - value
+      title: TextContent
+    TextInputComponent:
+      properties:
+        ui_type:
+          type: string
+          const: text_input
+          title: Ui Type
+          description: 텍스트 입력 컴포넌트
+        key:
+          type: string
+          title: Key
+          description: 요청에 사용할 key
+        display_name:
+          type: string
+          title: Display Name
+          description: 화면에 표시될 정보
+        value:
+          $ref: '#/components/schemas/TextInputValue'
+          description: placeholder 및 regex 정보를 포함하는 값
+      type: object
+      required:
+        - ui_type
+        - key
+        - display_name
+        - value
+      title: TextInputComponent
+    TextInputValue:
+      properties:
+        placeholder:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Placeholder
+          description: 입력창에 표시될 placeholder (null 또는 string)
+        regex:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Regex
+          description: 입력값 검증을 위한 정규식 (null 또는 string)
+      type: object
+      required:
+        - placeholder
+        - regex
+      title: TextInputValue
+    TextValue:
+      properties:
+        text:
+          type: string
+          title: Text
+          description: 메세지 텍스트
+      type: object
+      required:
+        - text
+      title: TextValue
+    ToolInfo:
+      properties:
+        name:
+          $ref: '#/components/schemas/ModelToolType'
+          description: 모델이 사용한 툴카드 정보
+        value:
+          type: object
+          title: Value
+          description: '특정 tool의 경우 - quiz_button_visible: boolean 포함'
+      type: object
+      required:
+        - name
+        - value
+      title: ToolInfo
+    UnknownConceptCreateRequest:
+      properties:
+        subject:
+          type: string
+          title: Subject
+          description: 과목명
+        key_concept:
+          type: string
+          title: Key Concept
+          description: 개념 정보
+        unknown_concept:
+          type: string
+          title: Unknown Concept
+          description: 모르는 개념 정보
+        unknown_concept_reason:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Unknown Concept Reason
+          description: 모른다고 판단한 이유
+      type: object
+      required:
+        - subject
+        - key_concept
+        - unknown_concept
+      title: UnknownConceptCreateRequest
+      description: 이해하지 못한 개념 생성 요청 DTO
+    UnknownConceptReadResponse:
+      properties:
+        subject:
+          type: string
+          title: Subject
+          description: 과목명
+        key_concept:
+          type: string
+          title: Key Concept
+          description: 개념 정보
+        unknown_concept:
+          type: string
+          title: Unknown Concept
+          description: 모르는 개념 정보
+        unknown_concept_reason:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Unknown Concept Reason
+          description: 모른다고 판단한 이유
+        id:
+          type: integer
+          title: Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+        - subject
+        - key_concept
+        - unknown_concept
+        - id
+        - created_at
+        - updated_at
+      title: UnknownConceptReadResponse
+      description: |-
+        이해하지 못한 개념 조회 응답 DTO
+
+        Attributes:
+            id (int): 고유 식별자
+            created_at (datetime): 생성 일시
+            updated_at (datetime): 수정 일시
+    UploadUrlRequest:
+      properties:
+        mime_type:
+          type: string
+          title: Mime Type
+      type: object
+      required:
+        - mime_type
+      title: UploadUrlRequest
+    UploadUrlResponse:
+      properties:
+        presigned_url:
+          type: string
+          title: Presigned Url
+        file_url:
+          type: string
+          title: File Url
+      type: object
+      required:
+        - presigned_url
+        - file_url
+      title: UploadUrlResponse
+    UserCreateRequest:
+      properties:
+        name:
+          type: string
+          title: Name
+          description: 유저 이름
+        grade:
+          type: integer
+          title: Grade
+          description: 유저 학년
+      type: object
+      required:
+        - name
+        - grade
+      title: UserCreateRequest
+      description: 사용자 생성 요청 DTO
+    UserResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+          description: 유저 ID
+        name:
+          type: string
+          title: Name
+          description: 유저 이름
+        grade:
+          type: integer
+          title: Grade
+          description: 유저 이름
+      type: object
+      required:
+        - id
+        - name
+        - grade
+      title: UserResponse
+      description: |-
+        사용자 응답 DTO
+
+        Attributes:
+            id (UUID): 사용자 고유 식별자
+            name (str): 사용자 이름
+            grade (int): 학년
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError

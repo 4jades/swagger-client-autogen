@@ -1,21 +1,38 @@
-import { defineConfig } from 'tsup'
+import { defineConfig } from 'tsup';
 
 export default defineConfig([
-  // 메인 라이브러리 빌드
+  // TypeScript 파일들 (CLI 스크립트 포함, shebang 추가)
   {
-    entry: ['index.ts'],
+    entry: ['src/scripts/**/*.ts'],
     format: ['esm'],
     dts: true,
     clean: true,
     splitting: false,
     sourcemap: true,
     minify: false,
-    outDir: 'dist',
+    outDir: 'dist/scripts',
     shims: true,
+    banner: {
+      js: '#!/usr/bin/env node',
+    },
   },
-  // CLI 스크립트 빌드 (shebang 포함)
+  // JavaScript 파일들 (scripts 폴더, shebang 추가)
   {
-    entry: ['scripts/cli.ts'],
+    entry: ['src/scripts/**/*.js'],
+    format: ['esm'],
+    dts: false, // JS 파일은 .d.ts 생성하지 않음
+    splitting: false,
+    sourcemap: true,
+    minify: false,
+    outDir: 'dist/scripts',
+    shims: true,
+    banner: {
+      js: '#!/usr/bin/env node',
+    },
+  },
+  // 나머지 모든 TypeScript 파일들
+  {
+    entry: ['src/**/*.ts', '!src/scripts/**/*'],
     format: ['esm'],
     dts: true,
     splitting: false,
@@ -23,24 +40,16 @@ export default defineConfig([
     minify: false,
     outDir: 'dist',
     shims: true,
-    banner: {
-      js: '#!/usr/bin/env node'
-    },
-    outExtension() {
-      return {
-        js: ".js"
-      }
-    }
   },
-  // 다른 스크립트 파일들 빌드
+  // 나머지 모든 JavaScript 파일들
   {
-    entry: ['scripts/init.ts'],
+    entry: ['src/**/*.{js,ejs}', '!src/scripts/**/*'],
     format: ['esm'],
-    dts: false,
+    dts: false, // JS 파일은 .d.ts 생성하지 않음
     splitting: false,
     sourcemap: true,
     minify: false,
-    outDir: 'dist/scripts',
+    outDir: 'dist',
     shims: true,
-  }
-])
+  },
+]);
