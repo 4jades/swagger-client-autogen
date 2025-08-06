@@ -22,7 +22,7 @@ function detectPackageManager(): string {
 function generateConfigTemplate(config: InitConfig): string {
   return `import type { InputCodegenConfig } from 'swagger-client-autogen';
 
-const config: InputCodegenConfig = {
+const config: Partial<InputCodegenConfig> = {
   // Swagger 설정
   input: '${config.uri}',
   httpClientType: 'ky',
