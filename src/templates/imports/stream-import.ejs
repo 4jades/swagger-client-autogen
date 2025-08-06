@@ -1,0 +1,33 @@
+<%
+/** 
+* @description Stream import 구문 생성 템플릿 입니다. api.ejs에서 호출합니다.
+*/
+
+const { utils, route, modelTypes, codegenConfig, resolveRelativeImportPath } = it;
+const { pascalCase } = utils;
+const routes = route.routes;
+const { pathInfo } = codegenConfig.customOutput;
+const streamHandlersAlias = resolveRelativeImportPath(pathInfo.streamHandlers.output.relative)
+
+const streamCallbackAndHandlerTypes = routes
+                                        .filter(route=>route.request.contentTypes?.includes('application/json') && route.response.contentTypes?.includes('text/event-stream'))
+                                        .reduce((acc, route)=>{
+                                            const apiName = pascalCase(`${route.request.path
+                                                              .split('/')
+                                                              .map((segment) =>
+                                                                      segment.includes('${') ? `By_${segment.replace(/[${}]/g, '')}` : segment
+                                                              )
+                                                              .join('_')}`);
+
+                                            const streamHandler = `${pascalCase(apiName)}StreamHandler`
+                                            const streamCallbackType = `type ${pascalCase(apiName)}StreamCallbacks`
+
+                                            acc.push(streamHandler, streamCallbackType)
+                                            return acc  
+                                        }, [])
+                                        
+%>
+
+<% if (streamCallbackAndHandlerTypes.length) { %>
+import { <%~ streamCallbackAndHandlerTypes.join(", ") %> } from "<%~ streamHandlersAlias %>"
+<% } %>

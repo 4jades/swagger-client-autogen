@@ -1,0 +1,58 @@
+<%
+/** 
+* @description api 호출 함수 생성 템플릿 입니다. api.ejs에서 호출합니다.
+*/
+
+const { utils, route, config } = it;
+const { _, pascalCase } = utils;
+const routeDocs = includeFile("./route-docs", { config, route, utils });
+
+const moduleConfig = route.moduleConfig;
+const routeConfig = route.routeConfig;
+const codegenConfig = route.codegenConfig;
+
+const {request, response} = routeConfig;
+
+const method = route.request.method;
+const payload = route.request.payload;
+const query = route.request.query;
+/**
+ * Http 요청에 대한 스트림 응답 여부 (eventSource 를 사용하는 sse 요청은 포함 안됨.)
+ */
+const isStreamResponse = route.request.contentTypes?.includes('application/json') && route.response.contentTypes?.includes('text/event-stream');
+const apiName = `${pascalCase(routeConfig.request.functionName.replace(method, ''))}`
+const streamConfig = {
+    handlerName: isStreamResponse ? `${apiName}StreamHandler` : null,
+    callback: {
+        arguments: isStreamResponse ? 'callbacks' : null,
+        typeExr: isStreamResponse ? `{callbacks: ${apiName}StreamCallbacks}` : null,
+    }
+}
+
+const requestFunctionArgumentsCode = [...request.parameters.arguments.all, streamConfig.callback.arguments].filter(Boolean).join(", ");
+const requestFunctionArgumentsTypeCode = [`${moduleConfig.apiParametersTypeName}["${request.functionName}"]`, streamConfig.callback.typeExr].filter(Boolean).join(" & ");
+%>
+
+/**
+<%~ _.compact([routeDocs.lines, routeDocs.streamDescription]).join('\n') %>
+
+*/
+async <%~ request.functionName %>({<%~ requestFunctionArgumentsCode %>}: <%~ requestFunctionArgumentsTypeCode %>) {
+    const instance = kyInstance ?? this.instance;
+    <%~ codegenConfig.createSchema && request.schema.expression ? `const validatedPayload = validateSchema(${request.schema.expression}, payload);` : '' %>
+
+    <%~ query ? `const urlSearchParams = createSearchParams(params);` : '' %>
+
+    const response = await instance.<%~ method %><<%~ response.dtoName %>>(`<%~ route.request.path.slice(1,) %>`,{
+        <%~ [
+            query ? 'searchParams: urlSearchParams,' : '',
+            payload ? `json: ${codegenConfig.createSchema ? 'validatedPayload' : 'payload'},` : '',
+             '...options,'
+        ].filter(Boolean).join("\n") %>
+    })<%~ !isStreamResponse ? '.json()' : '' %>;
+
+    <%~ codegenConfig.createSchema && response.schema.expression ? `const validateResponse = validateSchema(${response.schema.expression}, response);` : '' %>
+
+    return <%~ isStreamResponse ? `new ${streamConfig.handlerName}(response, callbacks);` : codegenConfig.createSchema && response.schema.expression ? `validateResponse` : 'response' %>;
+}
+

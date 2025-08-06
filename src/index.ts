@@ -1,0 +1,1 @@
+export type { InputCodegenConfig } from './types/codegen-config';

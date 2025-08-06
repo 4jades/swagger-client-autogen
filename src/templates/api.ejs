@@ -1,0 +1,47 @@
+<%
+/** 
+* @description API 클래스 생성 템플릿 입니다.
+*/
+
+const { utils, route, config, modelTypes } = it;
+const { _, pascalCase, require } = utils;
+const routes = route.routes;
+const dataContracts = _.map(modelTypes, "name");
+
+const moduleConfig = routes.at(0)?.moduleConfig;
+const codegenConfig = routes.at(0)?.codegenConfig;
+
+const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
+  fromPath: codegenConfig.customOutput.pathInfo.api.output.relative
+})
+%>
+
+import type { KyInstance, Options } from 'ky';
+import { type ZodSchema, z } from 'zod';
+import { match } from 'ts-pattern';
+
+<%~ codegenConfig.createSchema && includeFile('./imports/schema-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
+<%~ includeFile('./imports/dto-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
+<%~ includeFile('./imports/stream-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
+<%~ includeFile('./imports/api-utils.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
+
+
+export class <%= moduleConfig.apiClassName %> {
+private readonly instance: KyInstance;
+
+constructor(instance: KyInstance) {
+this.instance = instance;
+}
+
+<% for (const route of routes) { %>
+<%~ includeFile('./api-request-function.ejs', { ...it, route,  }) %>
+<% } %>
+}
+
+export type <%= moduleConfig.apiParametersTypeName %> = {
+<% for (const {routeConfig: {request: {functionName, parameters}}} of routes) { %>
+  <%= functionName %>: {
+    <%~ parameters.signatures.all.join(", ") %>
+  },
+<% } %>
+}

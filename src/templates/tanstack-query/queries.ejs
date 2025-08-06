@@ -1,0 +1,97 @@
+<%
+/** 
+* @description Tanstack Query - Query 생성 템플릿 입니다.
+*/
+
+const { utils, route, modelTypes, config } = it;
+
+const { moduleName, routes } = route;
+
+const queryRoutes = routes.filter(({ request: { method } }) => method === 'get');
+const moduleConfig = routes.at(0)?.moduleConfig;
+const codegenConfig = routes.at(0)?.codegenConfig;
+
+const { pathInfo } = codegenConfig.customOutput;
+const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
+  fromPath: pathInfo.queries.output.relative
+})
+%>
+
+<% if (queryRoutes?.length) { %>
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import type { DefaultError, UseQueryOptions, UseSuspenseQueryOptions } from '@tanstack/react-query';
+import type { KyInstance, Options } from 'ky';
+
+<%~ includeFile('../imports/dto-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
+
+<%~ includeFile('../imports/api-class.ejs', { ...it, moduleConfig, codegenConfig, resolveRelativeImportPath }) %>
+<%~ includeFile('../imports/api-instance.ejs', { ...it, moduleConfig, codegenConfig, resolveRelativeImportPath }) %>
+
+
+export const <% ~moduleConfig.query.queryKeyObjectName %> = {
+<% for (const {queryMeta, hookConfig: {query}} of queryRoutes) { %>
+<% ~query.queryKeyConstanstName %>: <% ~query.queryKeyConstanstFunction %>,
+<% } %>
+}
+
+const queries = {
+<% for (const {queryMeta, routeConfig, hookConfig: {query}} of queryRoutes) { %>
+<% ~routeConfig.request.functionName %>: ({ <%~ routeConfig.request.parameters.arguments.all.join(", ") %> }: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]) => ({
+    queryKey: <%~ moduleConfig.query.queryKeyObjectName %>.<% ~query.queryKeyConstanstName %>(<% ~query.queryKeyArgs %>),
+    queryFn: () => <% ~moduleConfig.apiInstanceName %>.<% ~routeConfig.request.functionName %>({<% ~routeConfig.request.parameters.arguments.all.join(", ") %>})
+}),
+<% } %>
+}
+
+export { queries as <%~ moduleName %>Queries };
+
+// ---------------------- Query ------------------------------
+<% for (const route of queryRoutes) {
+    const routeDocs = includeFile("../route-docs.ejs", { config, route: route, utils });
+    const query = route.hookConfig.query;
+    const routeConfig = route.routeConfig;
+    const hasRequestArgs = routeConfig.request.parameters.signatures.required.length > 0;
+%>
+/**
+<%~ routeDocs.lines %>
+*
+*/
+export const <%~ query.queryHookName %> = <TData=<%~ routeConfig.response.dtoName %>>(
+    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]<%~ hasRequestArgs ? '' : ' = {}' %>,
+    options?: Omit<UseQueryOptions<<%~ routeConfig.response.dtoName %>,DefaultError, TData>,'queryKey' | 'queryFn' >
+) => {
+    return useQuery({
+        ...queries.<% ~routeConfig.request.functionName %>(requestArgs),
+        ...options,
+        <%~ query.staleTime ? `staleTime: ${query.staleTime},` : '' %>
+        <%~ query.gcTime ? `gcTime: ${query.gcTime},` : '' %>
+    })
+}
+
+<% } %>
+
+// ------------------ Suspense Query --------------------------
+<% for (const route of queryRoutes) {
+    const routeDocs = includeFile("../route-docs.ejs", { config, route: route, utils });
+    const query = route.hookConfig.query;
+    const routeConfig = route.routeConfig;
+    const hasRequestArgs = routeConfig.request.parameters.signatures.required.length > 0;
+%>
+/**
+<%~ routeDocs.lines %>
+*
+*/
+export const <%~ query.suspenseQueryHookName %> = <TData=<%~ routeConfig.response.dtoName %>>(
+    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]<%~ hasRequestArgs ? '' : ' = {}' %>,
+    options?: Omit<UseQueryOptions<<%~ routeConfig.response.dtoName %>,DefaultError, TData>, 'queryKey' | 'queryFn' >
+) => {
+    return useSuspenseQuery({
+        ...queries.<% ~routeConfig.request.functionName %>(requestArgs),
+        ...options,
+        <%~ query.staleTime ? `staleTime: ${query.staleTime},` : '' %>
+        <%~ query.gcTime ? `gcTime: ${query.gcTime},` : '' %>
+    })
+}
+
+    <% } %>
+<% } %>

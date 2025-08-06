@@ -1,0 +1,50 @@
+<%
+/** 
+* @description 라우트 문서 생성 템플릿 입니다. api.ejs, tanstack-query/api.ejs, tanstack-query/route-types.ejs에서 호출합니다.
+*/
+
+const { config, route, utils } = it;
+const { _, formatDescription, fmtToJSDocLine, pascalCase, require } = utils;
+const { raw, request, response, routeName } = route;
+
+const jsDocDescription = raw.description ?
+        ` * @description ${formatDescription(raw.description, true)}` :
+        fmtToJSDocLine('No description', { eol: false });
+const jsDocLines = _.compact([
+    _.size(raw.tags) && ` * @tags ${raw.tags.join(", ")}`,
+    raw.summary && ` * @summary ${raw.summary}`,
+    ` * @request ${_.upperCase(request.method)}:${raw.route}`,
+    raw.deprecated && ` * @deprecated`,
+    routeName.duplicate && ` * @originalName ${routeName.original}`,
+    routeName.duplicate && ` * @duplicate`,
+    request.security && ` * @secure`,
+    ...(config.generateResponses && raw.responsesTypes.length
+            ? raw.responsesTypes.map(
+                    ({ type, status, description, isSuccess }) =>
+                            ` * @response \`${status}\` \`${_.replace(_.replace(type, /\/\*/g, "\\*"), /\*\//g, "*\\")}\` ${description}`,
+            )
+            : []),
+]).map(str => str.trimEnd()).join("\n");
+
+const isStreamResponse = route.request.contentTypes?.includes('application/json') && route.response.contentTypes?.includes('text/event-stream');
+const apiName = pascalCase(`${request.path
+                                .split('/')
+                                .map((segment) =>
+                                        segment.includes('${') ? `By_${segment.replace(/[${}]/g, '')}` : segment
+                                )
+                                .join('_')}`);
+const jsDocStreamDescription = _.compact([
+        ' * ',
+        ` * @todo 1. "shared/api/stream.gen.ts"를 상속받아 "./stream-handlers아 경로에 ${apiName}StreamHandler 클래스를 구현해주세요`,
+        ' * @see https://open.oss.navercorp.com/Digital-Healthcare-LAB/edu-max-fe/blob/develop/src/entities/chats/api/stream-handlers.ts',
+        ' * ',
+        ' * @todo 2. 스트리밍 응답은 tanstack query hook 코드를 자동으로 생성하지 않기 때문에 직접 훅을 구현해서 사용해야 합니다.',
+        ' * @see https://open.oss.navercorp.com/Digital-Healthcare-LAB/edu-max-fe/blob/develop/src/entities/chats/hooks/use-chat-stream.ts'
+]).map(str => str.trimEnd()).join('\n')
+
+return {
+    description: jsDocDescription,
+    lines: jsDocLines,
+    streamDescription: isStreamResponse ? jsDocStreamDescription : null
+}
+%>

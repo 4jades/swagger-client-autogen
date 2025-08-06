@@ -1,0 +1,21 @@
+<%
+/** 
+* @description Dto import 구문 생성 템플릿 입니다. api.ejs, tanstack-query/api.ejs, tanstack-query/route-types.ejs에서 호출합니다. 
+* 코드 생성 후에 import 구문 중복 제거가 동작하기 때문에 모든 dto를 import합니다.
+*/
+
+const { utils, route, modelTypes, codegenConfig, resolveRelativeImportPath } = it;
+const { _, pascalCase } = utils;
+const routes = route.routes;
+
+const { pathInfo } = codegenConfig.customOutput;
+const dtoAlias = resolveRelativeImportPath(pathInfo.dto.output.relative)
+
+const dataContracts = _.map(modelTypes, "name");
+const queryParamsDto = routes.filter(v=>v.specificArgs.query).map(v=>`${pascalCase(v.routeName.original)}QueryParams`)
+const headerDto = routes.filter(v=>v.specificArgs.headers).map(v=>`${pascalCase(v.routeName.original)}Headers`)
+
+const dtoArray = [...queryParamsDto, ...dataContracts, ...headerDto]
+%>
+
+<%~ dtoArray.length > 0 ? `import type { ${dtoArray.join(", ")} } from "${dtoAlias}";` : "" %>

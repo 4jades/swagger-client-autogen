@@ -1,0 +1,12 @@
+<%
+/** 
+* @description API Instance import 구문 생성 템플릿 입니다.
+*/
+
+const { moduleConfig, codegenConfig, resolveRelativeImportPath } = it;
+
+const { pathInfo } = codegenConfig.customOutput;
+const apiClassAlias = resolveRelativeImportPath(pathInfo.api.output.relative)
+%>
+import { <%~ moduleConfig.apiClassName %> } from '<%~ apiClassAlias %>';
+import type { <%~ moduleConfig.apiParametersTypeName %> } from '<%~ apiClassAlias %>';
