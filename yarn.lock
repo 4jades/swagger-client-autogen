@@ -2787,8 +2787,6 @@ __metadata:
     tsup: "npm:^8.5.0"
     tsx: "npm:^4.20.3"
     typescript: "npm:^5.0.0"
-  peerDependencies:
-    tsx: ^4.20.3
   bin:
     swagger-client-autogen: ./dist/scripts/cli.js
   languageName: unknown

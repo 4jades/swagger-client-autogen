@@ -41,15 +41,4 @@ export default defineConfig([
     outDir: 'dist',
     shims: true,
   },
-  // 나머지 모든 JavaScript 파일들
-  {
-    entry: ['src/**/*.{js,ejs}', '!src/scripts/**/*'],
-    format: ['esm'],
-    dts: false, // JS 파일은 .d.ts 생성하지 않음
-    splitting: false,
-    sourcemap: true,
-    minify: false,
-    outDir: 'dist',
-    shims: true,
-  },
 ]);
