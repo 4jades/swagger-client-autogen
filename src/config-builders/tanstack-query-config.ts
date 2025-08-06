@@ -1,5 +1,6 @@
 import type { RouteConfig } from '@/types/route-config';
 import type { ParsedRoute } from '@/types/swagger-typescript-api';
+import { buildKeyConstantsName } from '@/utils/tanstack-query-utils';
 import { camelCase, compact, findKey, pascalCase } from 'es-toolkit';
 import { produce } from 'immer';
 import { P, match } from 'ts-pattern';
@@ -139,9 +140,9 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
 
       const resolveArgument = (arg: string) => {
         return match(arg.trim())
-          .with('$parameters.$query', () => 'params')
+          .with('$parameters.$query', () => 'variables.params')
           .with(P.string.startsWith('$parameters.'), p => `variables.${camelCase(p.split('.').at(-1) ?? '')}`)
-          .with(P.string.startsWith('$payload.'), p => `data.${camelCase(p.split('.').at(-1) ?? '')}`)
+          .with(P.string.startsWith('$requestBody.'), p => `variables.payload.${camelCase(p.split('.').at(-1) ?? '')}`)
           .with(P.string.startsWith('$response.'), p => `data.${camelCase(p.split('.').at(-1) ?? '')}`)
           .otherwise(() => null);
       };
@@ -194,17 +195,3 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
   };
 }
 
-function buildKeyConstantsName({ path, method }: Pick<ParsedRoute['request'], 'path' | 'method'>) {
-  return (
-    method &&
-    path &&
-    `${method.toUpperCase()}${path
-      .split('/')
-      .map(segment =>
-        segment.match(/\$?{/)
-          ? segment.replace(/[${}]/g, '').toUpperCase().replace(/_/g, '')
-          : segment.toUpperCase().replace(/-/g, '_'),
-      )
-      .join('_')}`
-  );
-}

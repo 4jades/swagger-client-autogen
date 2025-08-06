@@ -499,6 +499,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/js-yaml@npm:^4.0.9":
+  version: 4.0.9
+  resolution: "@types/js-yaml@npm:4.0.9"
+  checksum: 10c0/24de857aa8d61526bbfbbaa383aa538283ad17363fcd5bb5148e2c7f604547db36646440e739d78241ed008702a8920665d1add5618687b6743858fae00da211
+  languageName: node
+  linkType: hard
+
+"@types/minimist@npm:^1.2.5":
+  version: 1.2.5
+  resolution: "@types/minimist@npm:1.2.5"
+  checksum: 10c0/3f791258d8e99a1d7d0ca2bda1ca6ea5a94e5e7b8fc6cde84dd79b0552da6fb68ade750f0e17718f6587783c24254bbca0357648dd59dc3812c150305cabdc46
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^24.1.0":
   version: 24.2.0
   resolution: "@types/node@npm:24.2.0"
@@ -2758,6 +2772,8 @@ __metadata:
   resolution: "swagger-client-autogen@workspace:."
   dependencies:
     "@clack/prompts": "npm:^0.11.0"
+    "@types/js-yaml": "npm:^4.0.9"
+    "@types/minimist": "npm:^1.2.5"
     "@types/node": "npm:^24.1.0"
     es-toolkit: "npm:^1.39.8"
     immer: "npm:^10.1.1"
@@ -2774,7 +2790,7 @@ __metadata:
   peerDependencies:
     tsx: ^4.20.3
   bin:
-    swagger-autogen: ./dist/scripts/cli.js
+    swagger-client-autogen: ./dist/scripts/cli.js
   languageName: unknown
   linkType: soft
 

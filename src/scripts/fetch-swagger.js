@@ -1,47 +1,24 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { kebabCase } from 'es-toolkit';
+import { compact, kebabCase } from 'es-toolkit';
 import yaml from 'js-yaml';
 import minimist from 'minimist';
 import { fetchSwagger } from '../utils/fetch-swagger';
 import { writeFileToPath } from '../utils/file';
 import { log } from '../utils/log';
+import { buildKeyConstantsName } from '../utils/tanstack-query-utils';
 import { isUrl } from '../utils/url';
 
-function extractQueryKey(pathKey, parameters) {
-  const pathSegments = pathKey.split('/').filter(Boolean);
+function extractQueryKey(pathKey, parameters, requestBody) {
+  const pathArgs = parameters?.filter(p => p.in === 'path')?.map(p => `$parameters.${p.name}`);
+  const queryArgs = parameters?.some(p => p.in === 'query') ? '$parameters.$query' : '';
+  const payloadArgs = requestBody ? '$requestBody' : '';
+  const functionArgs = compact([...(pathArgs ?? []), queryArgs, payloadArgs]);
 
-  // 함수명 생성 (GET_CHATS_CHATID_PROBLEMS 형태)
-  const functionNameParts = ['GET'];
-  const functionArgs = [];
-
-  for (const segment of pathSegments) {
-    if (segment.startsWith('{') && segment.endsWith('}')) {
-      const paramName = segment.slice(1, -1);
-      functionNameParts.push(paramName.toUpperCase());
-      functionArgs.push(`$parameters.${paramName}`);
-    } else {
-      functionNameParts.push(segment.toUpperCase());
-    }
-  }
-
-  if (parameters?.some(p => p.in === 'query')) {
-    // 쿼리 파라미터가 있는 경우
-    functionArgs.push('$parameters.$query');
-  }
-
-  // 함수 호출 형태로 반환: GET_CHATS_CHATID_PROBLEMS($parameters.chat_id)
-  const functionName = functionNameParts.join('_');
+  const functionName = buildKeyConstantsName({ path: pathKey, method: 'GET' });
   const argsString = functionArgs.join(', ');
 
   return `${functionName}(${argsString})`;
-}
-
-function injectQueryKey(operation, queryKey) {
-  return {
-    ...operation,
-    'x-query-key': queryKey,
-  };
 }
 
 export function addQueryKeyToGetRequests(swaggerData) {
@@ -51,8 +28,11 @@ export function addQueryKeyToGetRequests(swaggerData) {
     const getOp = pathItem.get;
     if (!getOp || getOp['x-query-key']) continue;
 
-    const queryKey = extractQueryKey(pathKey, getOp.tags, getOp.parameters);
-    pathItem.get = injectQueryKey(getOp, queryKey);
+    const queryKey = extractQueryKey(pathKey, getOp.parameters, getOp.requestBody);
+    pathItem.get = {
+      ...getOp,
+      'x-query-key': queryKey,
+    };
 
     log.success(`${pathKey} → x-query-key: ${queryKey}`);
   }
@@ -68,7 +48,7 @@ function mapOperationsByOperationId(swaggerData) {
 
   for (const [pathKey, pathItem] of Object.entries(swaggerData.paths)) {
     for (const [method, operation] of Object.entries(pathItem)) {
-      if (typeof operation === 'object' && operation.operationId) {
+      if (typeof operation === 'object' && operation?.operationId) {
         operationMap.set(operation.operationId, {
           pathKey,
           method,
@@ -161,10 +141,9 @@ if (!configPath) {
 const loadConfig = async configPath => {
   try {
     const configModule = await import(path.resolve(process.cwd(), configPath));
-    return configModule.config
-  } catch (error) {
+    return configModule.config;
+  } catch {
     console.error(`❌ 설정 파일을 불러올 수 없습니다: ${configPath}`);
-    console.error(error.message);
     process.exit(1);
   }
 };

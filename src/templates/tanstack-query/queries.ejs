@@ -50,13 +50,14 @@ export { queries as <%~ moduleName %>Queries };
     const routeDocs = includeFile("../route-docs.ejs", { config, route: route, utils });
     const query = route.hookConfig.query;
     const routeConfig = route.routeConfig;
+    const hasRequestArgs = routeConfig.request.parameters.signatures.required.length > 0;
 %>
 /**
 <%~ routeDocs.lines %>
 *
 */
 export const <%~ query.queryHookName %> = <TData=<%~ routeConfig.response.dtoName %>>(
-    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"] = {},
+    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]<%~ hasRequestArgs ? '' : ' = {}' %>,
     options?: Omit<UseQueryOptions<<%~ routeConfig.response.dtoName %>,DefaultError, TData>,'queryKey' | 'queryFn' >
 ) => {
     return useQuery({
@@ -74,13 +75,14 @@ export const <%~ query.queryHookName %> = <TData=<%~ routeConfig.response.dtoNam
     const routeDocs = includeFile("../route-docs.ejs", { config, route: route, utils });
     const query = route.hookConfig.query;
     const routeConfig = route.routeConfig;
+    const hasRequestArgs = routeConfig.request.parameters.signatures.required.length > 0;
 %>
 /**
 <%~ routeDocs.lines %>
 *
 */
 export const <%~ query.suspenseQueryHookName %> = <TData=<%~ routeConfig.response.dtoName %>>(
-    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"] = {},
+    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]<%~ hasRequestArgs ? '' : ' = {}' %>,
     options?: Omit<UseQueryOptions<<%~ routeConfig.response.dtoName %>,DefaultError, TData>, 'queryKey' | 'queryFn' >
 ) => {
     return useSuspenseQuery({
