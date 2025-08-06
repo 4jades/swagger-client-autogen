@@ -5,19 +5,41 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsup && yarn postbuild",
     "postbuild": "cp -r src/templates dist/",
-    "build:watch": "tsup --watch"
+    "build:watch": "tsup --watch",
+    "prepublishOnly": "yarn build"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "swagger",
+    "openapi",
+    "typescript",
+    "api-client",
+    "codegen",
+    "tanstack-query",
+    "react-query",
+    "cli",
+    "code-generation",
+    "api"
+  ],
+  "author": "dhlab-fe",
   "license": "MIT",
-  "description": "",
+  "homepage": "https://github.com/dhlab-org/swagger-client-autogen#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dhlab-org/swagger-client-autogen.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dhlab-org/swagger-client-autogen/issues"
+  },
+  "description": "Swagger/OpenAPI에서 TypeScript API 클라이언트 코드를 자동 생성하는 CLI 도구",
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts"
     }
   },
-  "bin": "./dist/scripts/cli.js",
+  "bin": {
+    "swagger-client-autogen": "./dist/scripts/cli.js"
+  },
   "files": ["dist/"],
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
