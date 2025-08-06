@@ -31,13 +31,14 @@ const streamConfig = {
 
 const requestFunctionArgumentsCode = [...request.parameters.arguments.all, streamConfig.callback.arguments].filter(Boolean).join(", ");
 const requestFunctionArgumentsTypeCode = [`${moduleConfig.apiParametersTypeName}["${request.functionName}"]`, streamConfig.callback.typeExr].filter(Boolean).join(" & ");
+const hasRequestArgs = routeConfig.request.parameters.signatures.required.length > 0;
 %>
 
 /**
 <%~ _.compact([routeDocs.lines, routeDocs.streamDescription]).join('\n') %>
 
 */
-async <%~ request.functionName %>({<%~ requestFunctionArgumentsCode %>}: <%~ requestFunctionArgumentsTypeCode %>) {
+async <%~ request.functionName %>({<%~ requestFunctionArgumentsCode %>}: <%~ requestFunctionArgumentsTypeCode %><%~ hasRequestArgs ? '' : ' = {}' %>) {
     const instance = kyInstance ?? this.instance;
     <%~ codegenConfig.createSchema && request.schema.expression ? `const validatedPayload = validateSchema(${request.schema.expression}, payload);` : '' %>
 
