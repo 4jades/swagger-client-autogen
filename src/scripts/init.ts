@@ -22,23 +22,21 @@ function detectPackageManager(): string {
 function generateConfigTemplate(config: InitConfig): string {
   return `import type { InputCodegenConfig } from 'swagger-client-autogen';
 
-const config: Partial<InputCodegenConfig> = {
+export const config: Partial<InputCodegenConfig> = {
   // Swagger 설정
-  input: '${config.uri}',
-  httpClientType: 'ky',
+  uri: '${config.uri}',
   ${
     config.username
       ? `
   // 인증 정보
-  auth: {
-    username: '${config.username}',
-    password: '${config.password || ''}',
-  },`
+  username: '${config.username}',
+  password: '${config.password || ''}',
+  `
       : ''
   }
   
   // 스키마 생성 여부
-  generateSchema: ${config.createSchema},
+  createSchema: ${config.createSchema},
 
   // 출력 설정 (필요에 따라 주석 해제하여 사용)
   /*
@@ -62,8 +60,6 @@ const config: Partial<InputCodegenConfig> = {
   },
   */
 };
-
-export default config;
 `;
 }
 
