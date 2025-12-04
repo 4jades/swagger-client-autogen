@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Corepack 활성화 및 Yarn Berry 설정
+        run: |
+          corepack enable
+          corepack prepare yarn@4.7.0 --activate
+          yarn --version
+
+      - name: 의존성 설치
+        run: yarn install --immutable
+
+      - name: 빌드
+        run: yarn build
+
+      - name: 빌드 결과 확인
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ dist 폴더가 생성되지 않았습니다"
+            exit 1
+          fi
+          echo "✅ 빌드가 성공적으로 완료되었습니다"
+          ls -la dist
