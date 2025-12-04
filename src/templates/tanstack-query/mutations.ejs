@@ -62,8 +62,8 @@ export { mutations as <%~ moduleName %>Mutations };
 <%~ routeDocs.lines %>
 
 */
-export const <%= mutation.mutationHookName %> = (
-    options?: Omit<UseMutationOptions<<%~ routeConfig.response.dtoName %>,DefaultError, <%= moduleConfig.apiParametersTypeName %>["<%= routeConfig.request.functionName %>"]>,'mutationFn'|'mutationKey' >
+export const <%= mutation.mutationHookName %> = <TContext = unknown>(
+    options?: Omit<UseMutationOptions<<%~ routeConfig.response.dtoName %>,DefaultError, <%= moduleConfig.apiParametersTypeName %>["<%= routeConfig.request.functionName %>"], TContext>,'mutationFn'|'mutationKey' >
 ) => {
     <% if (mutation.invalidateQueryKey.length) { %>
     const queryClient = useQueryClient();

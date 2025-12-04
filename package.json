@@ -6,7 +6,8 @@
     "build": "tsup && yarn postbuild",
     "postbuild": "cp -r src/templates dist/",
     "build:watch": "tsup --watch",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "debug": "cd debug-playground && tsx ../src/scripts/generate-all.js --config ./swagger-client-autogen.config.ts"
   },
   "keywords": [
     "swagger",
@@ -37,10 +38,10 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "bin": {
-    "swagger-client-autogen": "./dist/scripts/cli.js"
-  },
-  "files": ["dist/"],
+  "bin": "./dist/scripts/cli.js",
+  "files": [
+    "dist/"
+  ],
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/minimist": "^1.2.5",
@@ -53,7 +54,7 @@
     "@clack/prompts": "^0.11.0",
     "es-toolkit": "^1.39.8",
     "immer": "^10.1.1",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "minimist": "^1.2.8",
     "node-fetch": "^3.3.2",
     "picocolors": "^1.1.1",

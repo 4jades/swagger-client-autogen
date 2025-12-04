@@ -17,9 +17,10 @@ const method = route.request.method;
 const payload = route.request.payload;
 const query = route.request.query;
 /**
- * Http 요청에 대한 스트림 응답 여부 (eventSource 를 사용하는 sse 요청은 포함 안됨.)
+ * Http 요청에 대한 스트림 응답 여부
+ * TODO: SSE 구분 필요
  */
-const isStreamResponse = route.request.contentTypes?.includes('application/json') && route.response.contentTypes?.includes('text/event-stream');
+const isStreamResponse = route.response.contentTypes?.includes('text/event-stream');
 const apiName = `${pascalCase(routeConfig.request.functionName.replace(method, ''))}`
 const streamConfig = {
     handlerName: isStreamResponse ? `${apiName}StreamHandler` : null,

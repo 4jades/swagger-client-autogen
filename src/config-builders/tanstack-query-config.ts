@@ -70,7 +70,7 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
           .split('/')
           .filter(segment => segment && segment !== 'api')
           .map(segment =>
-            segment.match(/\${/) ? segment.replace(/[${}]/g, '').replace(/-/g, '_') : `'${segment.replace(/-/g, '_')}'`,
+            segment.match(/\${/) ? segment.replace(/[${}]/g, '') : `'${segment}'`,
           );
         const queryParamsSegments = query ? 'params' : null;
         const payloadSegments = payload ? 'payload' : null;

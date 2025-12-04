@@ -10,7 +10,7 @@ const { pathInfo } = codegenConfig.customOutput;
 const streamHandlersAlias = resolveRelativeImportPath(pathInfo.streamHandlers.output.relative)
 
 const streamCallbackAndHandlerTypes = routes
-                                        .filter(route=>route.request.contentTypes?.includes('application/json') && route.response.contentTypes?.includes('text/event-stream'))
+                                        .filter(route => route.response.contentTypes?.includes('text/event-stream'))
                                         .reduce((acc, route)=>{
                                             const apiName = pascalCase(`${route.request.path
                                                               .split('/')
