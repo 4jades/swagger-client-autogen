@@ -35,11 +35,11 @@ const apiName = pascalCase(`${request.path
                                 .join('_')}`);
 const jsDocStreamDescription = _.compact([
         ' * ',
-        ` * @todo 1. "shared/api/stream.gen.ts"를 상속받아 "./stream-handlers아 경로에 ${apiName}StreamHandler 클래스를 구현해주세요`,
-        ' * @see https://open.oss.navercorp.com/Digital-Healthcare-LAB/edu-max-fe/blob/develop/src/entities/chats/api/stream-handlers.ts',
+        ` * @todo 1. ReadableStreamHandler를 상속받아 "./stream-handlers" 경로에 ${apiName}StreamHandler 클래스를 구현해주세요`,
+        ' * @see 구현 가이드: https://github.com/dhlab-org/swagger-client-autogen/blob/main/.docs/stream-handler-guide.md',
         ' * ',
-        ' * @todo 2. 스트리밍 응답은 tanstack query hook 코드를 자동으로 생성하지 않기 때문에 직접 훅을 구현해서 사용해야 합니다.',
-        ' * @see https://open.oss.navercorp.com/Digital-Healthcare-LAB/edu-max-fe/blob/develop/src/entities/chats/hooks/use-chat-stream.ts'
+        ' * @todo 2. 스트리밍 응답은 TanStack Query hook 코드를 자동으로 생성하지 않기 때문에 직접 훅을 구현해서 사용해야 합니다.',
+        ' * @see TanStack Query 통합 가이드: https://github.com/dhlab-org/swagger-client-autogen/blob/main/.docs/tanstack-query-stream.md'
 ]).map(str => str.trimEnd()).join('\n')
 
 return {
