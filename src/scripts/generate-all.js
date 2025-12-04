@@ -10,6 +10,7 @@ import { writeFileToPath } from '../utils/file.ts';
 import { log } from '../utils/log.ts';
 import { buildRequestFunctionName } from '../utils/route-utils.ts';
 import { generateApiCode } from '../utils/swagger-typescript-api.ts';
+import {kebabCase} from "es-toolkit";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -92,7 +93,7 @@ const generateApiFunctionCode = async config => {
     },
   });
 
-  for (const { fileName, fileContent } of apiFunctionCode.files) {
+  for (const {fileName, fileContent} of apiFunctionCode.files) {
     if (fileName === 'http-client') continue;
 
     const { pathInfo } = config.customOutput;
@@ -100,7 +101,7 @@ const generateApiFunctionCode = async config => {
     if (fileName === 'data-contracts') {
       await writeFileToPath(pathInfo.dto.output.absolute, fileContent);
     } else {
-      const moduleName = fileName.replace('Route', '').toLowerCase();
+      const moduleName = kebabCase(fileName.replace('Route', ''));
 
       if (fileName.match(/Route$/)) {
         const output = pathInfo.apiInstance.output.absolute.replace('{moduleName}', moduleName);
@@ -181,7 +182,7 @@ const generateTanstackQueryCode = async config => {
      * @description: 파일명이 고정돼서 생성되기 때문에 수동으로 변환함
      * @see: https://github.com/acacode/swagger-typescript-api/blob/a9cb2f8388083330d7f28871788885cc9de145d3/src/code-gen-process.ts#L418
      */
-    const moduleName = fileName.replace('Route', '').toLowerCase();
+    const moduleName = kebabCase(fileName.replace('Route', ''));
 
     if (fileName.match(/Route$/)) {
       const output = pathInfo.mutations.output.absolute.replace('{moduleName}', moduleName);
