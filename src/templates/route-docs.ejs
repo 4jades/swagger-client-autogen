@@ -26,7 +26,7 @@ const jsDocLines = _.compact([
             : []),
 ]).map(str => str.trimEnd()).join("\n");
 
-const isStreamResponse = route.request.contentTypes?.includes('application/json') && route.response.contentTypes?.includes('text/event-stream');
+const isStreamResponse = route.response.contentTypes?.includes('text/event-stream');
 const apiName = pascalCase(`${request.path
                                 .split('/')
                                 .map((segment) =>
