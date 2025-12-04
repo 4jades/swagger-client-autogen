@@ -1,4 +1,4 @@
-name: Release & Publish
+name: Release
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   id-token: write # npm provenance를 위해 필요
 
 jobs:
-  release:
+  publish:
     runs-on: ubuntu-latest
 
     steps:
@@ -34,6 +34,18 @@ jobs:
 
       - name: 빌드
         run: yarn build
+
+      - name: 태그와 package.json 버전 일치 확인
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+
+          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "❌ 태그 버전($TAG_VERSION)과 package.json 버전($PACKAGE_VERSION)이 일치하지 않습니다"
+            exit 1
+          fi
+
+          echo "✅ 버전 확인 완료: v$PACKAGE_VERSION"
 
       - name: npm에 배포
         run: |
