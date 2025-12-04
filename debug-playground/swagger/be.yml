@@ -1,0 +1,351 @@
+openapi: 3.1.0
+info:
+  title: Simple Movie API
+  version: 1.0.0
+  description: 영화 정보 조회, 리뷰 작성(평점/댓글), 북마크 및 대본 스트리밍 기능을 제공하는 테스트용 API입니다.
+paths:
+  # 1. 영화 조회 (기본 CRUD)
+  /movies:
+    get:
+      tags:
+        - movies
+      summary: Get Movies
+      description: 영화 목록을 조회합니다.
+      operationId: get_movies
+      parameters:
+        - name: genre
+          in: query
+          required: false
+          schema:
+            type: string
+            title: Genre
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: 'null'
+            title: Cursor
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CursorPaginateResponse_MovieResponse_'
+      x-query-key: GET_MOVIES($parameters.$query)
+
+  /movies/{movie_id}:
+    get:
+      tags:
+        - movies
+      summary: Get Movie Detail
+      description: 특정 영화의 상세 정보를 조회합니다.
+      operationId: get_movie_detail
+      parameters:
+        - name: movie_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieDetailResponse'
+      x-query-key: GET_MOVIE_DETAIL($parameters.movie_id)
+
+  # 2. SSE 스트리밍 테스트 (영화 대본 실시간 전송)
+  /movies/{movie_id}/script-stream:
+    get:
+      tags:
+        - streaming
+      summary: Stream Movie Script
+      description: 영화 대본을 실시간 스트리밍(SSE)으로 받아옵니다.
+      operationId: stream_movie_script
+      parameters:
+        - name: movie_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: SSE 이벤트 스트림
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |
+                  event: script_line
+                  data: {"time": "00:01:23", "actor": "Iron Man", "line": "I am Iron Man."}
+
+                  event: script_end
+                  data: {}
+
+  # 3. 하이픈이 포함된 URL 테스트 (리뷰 및 평점)
+  /movie-reviews:
+    get:
+      tags:
+        - movie-reviews
+      summary: Get Reviews
+      description: 특정 영화의 리뷰 목록을 조회합니다. (URL 하이픈 테스트용)
+      operationId: get_movie_reviews
+      parameters:
+        - name: movie_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: sort-by
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [latest, rating-high, rating-low]
+            default: latest
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewListResponse'
+      x-query-key: GET_MOVIE_REVIEWS($parameters.movie_id)
+
+    post:
+      tags:
+        - movie-reviews
+      summary: Create Review
+      description: 영화에 평점과 댓글을 남깁니다.
+      operationId: create_movie_review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+      x-invalidate-query-key:
+        - GET_MOVIE_REVIEWS($requestBody.movie_id)
+
+  /movie-reviews/{review-id}:
+    delete:
+      tags:
+        - movie-reviews
+      summary: Delete Review
+      description: 리뷰를 삭제합니다. (Path Parameter 하이픈 테스트)
+      operationId: delete_movie_review
+      parameters:
+        - name: review-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No Content
+
+  # 4. 북마크 (사용자 인터랙션)
+  /bookmarks:
+    get:
+      tags:
+        - bookmarks
+      summary: Get My Bookmarks
+      description: (토큰 기반) 현재 사용자의 영화 북마크 목록을 조회합니다.
+      operationId: get_my_bookmarks
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarkListResponse'
+      x-query-key: GET_MY_BOOKMARKS()
+
+    post:
+      tags:
+        - bookmarks
+      summary: Toggle Bookmark
+      description: 영화를 북마크에 추가하거나 제거합니다.
+      operationId: toggle_bookmark
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookmarkRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarkResponse'
+      x-invalidate-query-key:
+        - GET_MY_BOOKMARKS()
+
+components:
+  schemas:
+    # --- Movie Schemas ---
+    MovieResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        genre:
+          type: string
+        poster_url:
+          type: string
+        average_rating:
+          type: number
+          format: float
+      required: [id, title, genre]
+
+    MovieDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/MovieResponse'
+        - type: object
+          properties:
+            description:
+              type: string
+            release_date:
+              type: string
+              format: date
+            director:
+              type: string
+            cast:
+              type: array
+              items:
+                type: string
+
+    CursorPaginateResponse_MovieResponse_:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MovieResponse'
+        next_cursor:
+          anyOf:
+            - type: string
+            - type: 'null'
+      required: [items, next_cursor]
+
+    # --- Review Schemas ---
+    ReviewCreateRequest:
+      type: object
+      properties:
+        movie_id:
+          type: integer
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: 1~5 사이의 정수 평점
+        comment:
+          type: string
+          description: 영화 감상평
+      required: [movie_id, rating, comment]
+
+    ReviewResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        movie_id:
+          type: integer
+        user_name:
+          type: string
+        rating:
+          type: integer
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required: [id, movie_id, rating, comment, created_at]
+
+    ReviewListResponse:
+      type: object
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewResponse'
+        total_count:
+          type: integer
+      required: [reviews, total_count]
+
+    # --- Bookmark Schemas ---
+    BookmarkRequest:
+      type: object
+      properties:
+        movie_id:
+          type: integer
+      required: [movie_id]
+
+    BookmarkResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        movie_id:
+          type: integer
+        is_bookmarked:
+          type: boolean
+          description: "북마크 상태 (true: 추가됨, false: 삭제됨)"
+        bookmarked_at:
+          type: string
+          format: date-time
+      required: [id, movie_id, is_bookmarked]
+
+    BookmarkListResponse:
+      type: object
+      properties:
+        bookmarks:
+          type: array
+          items:
+            $ref: '#/components/schemas/MovieResponse'
+      required: [bookmarks]
+
+    # --- Error Schema ---
+    HTTPValidationError:
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+
+    ValidationError:
+      type: object
+      properties:
+        loc:
+          type: array
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+        msg:
+          type: string
+        type:
+          type: string
+      required: [loc, msg, type]

@@ -6,7 +6,8 @@
     "build": "tsup && yarn postbuild",
     "postbuild": "cp -r src/templates dist/",
     "build:watch": "tsup --watch",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "debug": "cd debug-playground && tsx ../src/scripts/generate-all.js --config ./swagger-client-autogen.config.ts"
   },
   "keywords": [
     "swagger",
