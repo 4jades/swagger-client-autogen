@@ -37,7 +37,7 @@ export const <% ~moduleConfig.mutation.mutationKeyObjectName %> = {
 <% for (const {hookConfig: {mutation}} of mutationKeyRoutes) { %>
     <% ~mutation.mutationKeyConstanstName %>: <% ~mutation.mutationKeyConstanstContent %> as const,
 <% } %>
-};
+} as const;
 
 const mutations = {
 <% for (const {customeMeta, routeConfig, hookConfig: {mutation}} of mutationRoutes) { %>
