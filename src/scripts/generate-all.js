@@ -10,7 +10,7 @@ import { writeFileToPath } from '../utils/file.ts';
 import { log } from '../utils/log.ts';
 import { buildRequestFunctionName } from '../utils/route-utils.ts';
 import { generateApiCode } from '../utils/swagger-typescript-api.ts';
-import {kebabCase} from "es-toolkit";
+import { kebabCase } from "es-toolkit";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -141,7 +141,24 @@ const generateTanstackQueryCode = async config => {
       { name: 'objectFieldJsDoc', fileName: 'object-field-jsdoc' },
       { name: 'httpClient', fileName: 'http-client' },
     ],
+    extraTemplates: [
+      {
+        name: 'global-mutation-effect',
+        path: path.resolve(templatePath, 'global-mutation-effect.ejs'),
+      },
+    ],
     hooks: {
+      onPrepareConfig: (config) => {
+        return {
+          ...config,
+          utils: {
+            ...config.utils,
+            kebabCase: (str) => {
+              return kebabCase(str);
+            },
+          },
+        }
+      },
       onCreateRouteName: (routeNameInfo, rawRouteInfo) => {
         return {
           ...routeNameInfo,
@@ -177,6 +194,11 @@ const generateTanstackQueryCode = async config => {
     if (fileName === 'http-client' || fileName === 'data-contracts') continue;
 
     const { pathInfo } = config.customOutput;
+
+    if (fileName === 'global-mutation-effect') {
+      await writeFileToPath(pathInfo.globalMutationEffectType.output.absolute, fileContent);
+      continue;
+    }
 
     /**
      * @description: 파일명이 고정돼서 생성되기 때문에 수동으로 변환함

@@ -25,9 +25,34 @@ export function generateModuleConfig(route: ParsedRoute, config: CodegenConfig) 
 export function resolveRelativeImportPath(aliasMap: Record<string, string>, maxDepth: number) {
   return ({ fromPath }: { fromPath: string }) => {
     return (importPath: string) => {
+      // FSD 레이어 추출 함수
+      const extractFsdLayer = (filePath: string): string | null => {
+        const fsdLayers = ['app', 'pages', 'widgets', 'features', 'entities', 'shared'];
+        for (const layer of fsdLayers) {
+          const layerPattern = new RegExp(`/(${layer})/`);
+          const match = filePath.match(layerPattern);
+          if (match) {
+            return match[1];
+          }
+        }
+        return null;
+      };
+
       // fromPath와 importPath 간의 상대 경로 계산
       const fromDir = path.dirname(fromPath);
       const relativePath = path.relative(fromDir, importPath);
+
+      // FSD cross-layer import 체크
+      const fromLayer = extractFsdLayer(fromPath);
+      const importLayer = extractFsdLayer(importPath);
+
+      // Cross-layer import는 무조건 alias 사용 (FSD 규칙)
+      if (fromLayer && importLayer && fromLayer !== importLayer) {
+        const aliasPath = generateAlias(importPath, aliasMap);
+        if (aliasPath !== importPath.replace(/\.tsx?$/, '')) {
+          return aliasPath;
+        }
+      }
 
       // 깊이 제한 확인
       const depth = relativePath.split('/').filter(s => s === '..').length;

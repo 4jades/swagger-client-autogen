@@ -1,0 +1,73 @@
+<%
+const { modelTypes, utils, config, routes } = it;
+
+const allRouteDependencies = routes.combined;
+const flatRoute = allRouteDependencies.reduce((acc, v) => {
+  acc.routes.push(...v.routes);
+  return acc;
+}, {routes: []});
+
+const firstRoute = allRouteDependencies.at(0)
+const moduleConfig = firstRoute.routes.at(0)?.moduleConfig;
+const codegenConfig = firstRoute.routes.at(0)?.codegenConfig;
+
+const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
+  fromPath: codegenConfig.customOutput.pathInfo.globalMutationEffectType.output.relative
+})
+%>
+
+import type { DefaultError, Mutation, QueryClient } from '@tanstack/react-query';
+<%~ includeFile('../imports/mutations-import.ejs', { routes, utils, codegenConfig, resolveRelativeImportPath }) %>
+
+type AnyMutationFn = (variables: any) => any;
+
+type MutationFactory = () => {
+  mutationFn: AnyMutationFn;
+  mutationKey: readonly unknown[];
+};
+
+export type MutationMap = Record<string, MutationFactory>;
+
+type ExtractMutationDef<M extends MutationMap, K extends keyof M> = ReturnType<M[K]>;
+
+type ExtractMutationFn<M extends MutationMap, K extends keyof M> = ExtractMutationDef<M, K>['mutationFn'];
+
+type ExtractMutationVariables<M extends MutationMap, K extends keyof M> = Parameters<ExtractMutationFn<M, K>>[0];
+
+type ExtractMutationData<M extends MutationMap, K extends keyof M> = Awaited<ReturnType<ExtractMutationFn<M, K>>>;
+
+export type GlobalMutationEffectMap<M extends MutationMap> = Partial<{
+  [K in keyof M]: {
+    onSuccess: {
+      invalidate: (
+        data: ExtractMutationData<M, K>,
+        variables: ExtractMutationVariables<M, K>,
+        context: unknown,
+        mutation: Mutation<ExtractMutationData<M, K>, DefaultError, ExtractMutationVariables<M, K>, unknown>,
+      ) => void;
+    };
+  };
+}>;
+
+<%
+for (const moduleGroup of allRouteDependencies) {
+  const moduleName = moduleGroup.moduleName;
+  const pascalCaseModuleName = utils.pascalCase(moduleName);
+  const camelCaseModuleName = utils.internalCase(moduleName);
+%>
+export type T<%~ pascalCaseModuleName %>GlobalMutationEffects = GlobalMutationEffectMap<typeof <%~ camelCaseModuleName %>Mutations>;
+<% } %>
+
+export type TGlobalMutationEffectFactory = (
+  queryClient: QueryClient,
+) => Partial<
+<%
+for (let i = 0; i < allRouteDependencies.length; i++) {
+  const moduleGroup = allRouteDependencies[i];
+  const moduleName = moduleGroup.moduleName;
+  const pascalCaseModuleName = utils.pascalCase(moduleName);
+  const isLast = i === allRouteDependencies.length - 1;
+%>
+  T<%~ pascalCaseModuleName %>GlobalMutationEffects<%~ isLast ? '' : ' &' %>
+<% } %>
+>;

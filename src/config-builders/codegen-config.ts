@@ -52,6 +52,12 @@ export const setupCodegenConfig = (config: InputCodegenConfig): CodegenConfig =>
             config.customOutput?.pathInfo?.streamHandlers,
           ),
         },
+        globalMutationEffectType: {
+          output: buildPathOutput(
+            'src/shared/api/global-mutation-effect.type.ts',
+            config.customOutput?.pathInfo?.globalMutationEffectType,
+          ),
+        },
       },
     },
   };

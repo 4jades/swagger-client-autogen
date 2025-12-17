@@ -8,7 +8,7 @@ export type InputCodegenConfig = {
       aliasMap: Record<string, string>;
       aliasMapDepth?: number;
     };
-    pathInfo: {
+    pathInfo?: {
       dto?: string;
       api?: string;
       apiInstance?: string;
@@ -19,6 +19,7 @@ export type InputCodegenConfig = {
       streamUtils?: string;
       typeGuards?: string;
       streamHandlers?: string;
+      globalMutationEffectType?: string;
     };
   };
 };
