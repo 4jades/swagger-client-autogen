@@ -23,14 +23,13 @@ const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
 
 <% if (mutationRoutes?.length) { %>
 import type {DefaultError, UseMutationOptions } from '@tanstack/react-query';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import type { KyInstance, Options } from 'ky';
 
 <%~ includeFile('../imports/dto-import.ejs', { ...it, codegenConfig, resolveRelativeImportPath }) %>
 
 <%~ includeFile('../imports/api-class.ejs', { ...it, moduleConfig, codegenConfig, resolveRelativeImportPath }) %>
 <%~ includeFile('../imports/api-instance.ejs', { ...it, moduleConfig, codegenConfig, resolveRelativeImportPath }) %>
-<%~ includeFile('../imports/query.ejs', { ...it, moduleConfig, codegenConfig, resolveRelativeImportPath }) %>
 
 
 export const <% ~moduleConfig.mutation.mutationKeyObjectName %> = {
@@ -68,22 +67,9 @@ export { mutations as <%~ moduleName %>Mutations };
 export const <%= mutation.mutationHookName %> = <TContext = unknown>(
     options?: Omit<UseMutationOptions<<%~ routeConfig.response.dtoName %>,DefaultError, <%= moduleConfig.apiParametersTypeName %>["<%= routeConfig.request.functionName %>"], TContext>,'mutationFn'|'mutationKey' >
 ) => {
-    <% if (mutation.invalidateQueryKey.length) { %>
-    const queryClient = useQueryClient();
-    <% } %>
-
     return useMutation({
         ...mutations.<%= routeConfig.request.functionName %>(),
         ...options,
-        <% if (mutation.invalidateQueryKey.length) { %>
-        onSuccess: (data, variables, context) => {
-            <% for (const invalidateQueryKey of mutation.invalidateQueryKey) { %>
-            queryClient.invalidateQueries({ queryKey: <%~ `${moduleConfig.query.queryKeyObjectName}.${invalidateQueryKey}` %>, exact: true });
-            <% } %>
-
-            options?.onSuccess?.(data, variables, context);
-        },
-        <% } %>
     });
 };
 

@@ -14,7 +14,6 @@
 - ⚡ **Ky HTTP 클라이언트** - 현대적이고 가벼운 HTTP 클라이언트
 - 🔄 **TanStack Query 통합** - React Query hooks 자동 생성
 - 🛡️ **Zod 스키마 생성** - 런타임 타입 검증 (선택사항)
-- 🔗 **API Call Graph** - 뮤테이션 → 쿼리 자동 연결
 - 📁 **모듈러 구조** - 태그별 코드 분리
 
 ## 📋 목차
@@ -23,13 +22,12 @@
 2. [📖 사용법](#-사용법)
 3. [⚙️ 설정 옵션](#️-설정-옵션)
 4. [🎯 생성되는 코드](#-생성되는-코드)
-5. [🔗 API Call Graph](#-api-call-graph)
-6. [🛠️ 고급 기능](#️-고급-기능)
-7. [🔧 개발 가이드](#-개발-가이드)
-8. [📝 예시](#-예시)
-9. [❓ FAQ](#-faq)
-10. [🐛 트러블슈팅](#-트러블슈팅)
-11. [📄 라이선스](#-라이선스)
+5. [🛠️ 고급 기능](#️-고급-기능)
+6. [🔧 개발 가이드](#-개발-가이드)
+7. [📝 예시](#-예시)
+8. [❓ FAQ](#-faq)
+9. [🐛 트러블슈팅](#-트러블슈팅)
+10. [📄 라이선스](#-라이선스)
 
 ## 🚀 Quick Start
 
@@ -87,17 +85,12 @@ npx swagger-client-autogen init
 ### API 클라이언트 생성
 
 ```bash
-# 2. Swagger 파일 다운로드 및 병합 (Query Key 자동 생성)
+# 2. Swagger 파일 다운로드 및 병합
 npx swagger-client-autogen fetch --config swagger/config.ts --output swagger/api.yml
 
 # 3. API 클라이언트 코드 생성
 npx swagger-client-autogen generate --config swagger/config.ts
 ```
-
-> [!TIP]  
-> **`fetch` 단계에서 자동으로 처리되는 것들:**  
-> 🔑 Query Key 자동 생성 (`x-query-key`)  
-> 🔗 API Call Graph 연결 준비
 
 ### 생성된 파일들
 
@@ -156,10 +149,6 @@ npx swagger-client-autogen fetch --config swagger/config.ts --output swagger/api
 ```
 
 Config 파일에서 지정된 웹 URL로부터 Swagger 파일을 다운로드하고 병합합니다.
-
-**자동 처리 기능:**
-- 📋 **Query Key 자동 생성**: GET 엔드포인트에 `x-query-key` 자동 추가
-- 🔄 **API Call Graph 준비**: TanStack Query 무효화를 위한 기반 구조 생성 
 
 **옵션:**
 - `--config, -c`: 설정 파일 경로 (필수)
@@ -466,8 +455,8 @@ import { usersApi } from './instance';
 
 // Mutation Keys
 export const USERS_MUTATION_KEY = {
-  POST_USERS: ['users'],
-  DELETE_USERS_USERID: ['users', 'userId'],
+  POST_USERS: ['users'] as const,
+  DELETE_USERS_USERID: ['users', 'userId'] as const,
 };
 
 // Mutation 객체 (재사용 가능)
@@ -477,15 +466,18 @@ const mutations = {
       return usersApi.postUsers({ payload, kyInstance, options });
     },
     mutationKey: USERS_MUTATION_KEY.POST_USERS,
+    meta: {
+      mutationFnName: 'postUsers',
+    }
   }),
 };
 
 export { mutations as usersMutations };
 
 // Mutation Hooks
-export const usePostUsersMutation = (
+export const usePostUsersMutation = <TContext = unknown>(
   options?: Omit<
-    UseMutationOptions<UserResponseDto, DefaultError, TUsersApiRequestParameters['postUsers']>,
+    UseMutationOptions<UserResponseDto, DefaultError, TUsersApiRequestParameters['postUsers'], TContext>,
     'mutationFn' | 'mutationKey'
   >,
 ) => {
@@ -495,169 +487,6 @@ export const usePostUsersMutation = (
   });
 };
 ```
-
-## 🔗 API Call Graph
-
-### 뮤테이션 → 쿼리 자동 무효화
-
-API Call Graph 기능은 Swagger 파일의 `x-invalidate-query-key` 확장 필드를 기반으로 뮤테이션 성공 시 관련 쿼리를 자동으로 무효화합니다.
-
-#### Swagger 확장 필드 활용
-
-**1. Query Key 자동 생성 (`x-query-key`)**
-
-> [!NOTE]  
-> **`x-query-key`는 `fetch` 명령어 실행 시 경로 기반으로 자동 생성됩니다.**  
-> 사용자가 수동으로 작성할 필요가 없으며, API 경로 구조에 따라 최적의 쿼리 키가 자동으로 할당됩니다.
-
-```yaml
-# fetch 명령어로 자동 생성되는 Query Key 예시
-/chats:
-  get:
-    x-query-key: 'GET_CHATS()'                    # 자동 생성
-    
-/chats/{chat_id}:
-  get:
-    x-query-key: 'GET_CHATS_CHATID($parameters.chat_id)'  # 자동 생성
-    
-/chats/{chat_id}/messages:
-  get:
-    x-query-key: 'GET_CHATS_CHATID_MESSAGES($parameters.chat_id)'  # 자동 생성
-```
-
-**자동 생성 규칙:**
-- HTTP 메서드와 경로를 기반으로 함수명 생성 (예: `GET_CHATS_CHATID_MESSAGES`)
-- 경로 매개변수는 함수 인수로 변환 (`$parameters.{param_name}`)
-- 쿼리 파라미터가 있는 경우 `$parameters.$query` 추가
-- 언더바(`_`)로 구분된 대문자 함수명 사용
-
-**2. 무효화 키 정의 (`x-invalidate-query-key`)**
-```yaml
-# DELETE 엔드포인트에 무효화할 쿼리 키들 정의
-/chats/{chat_id}:
-  delete:
-    x-invalidate-query-key:
-      - 'GET_CHATS()'                              # 전체 채팅 목록
-      - 'GET_CHATS_CHATID($parameters.chat_id)'    # 특정 채팅
-      - 'GET_CHATS_CHATID_MESSAGES($parameters.chat_id)'  # 채팅 메시지
-      - 'GET_CHATS_CHATID_PROBLEMS($parameters.chat_id)'  # 채팅 문제
-```
-
-**파라미터 참조 형식**
-
-| 파라미터 형식 | 설명 | 예시 |
-|---------------|------|------|
-| `$parameters.{name}` | Path parameter의 이름 | `$parameters.chat_id`, `$parameters.user_id` |
-| `$parameters.$query` | 쿼리 파라미터 묶음 (객체 형태로 querykey에 포함) | `$parameters.$query` |
-| `$requestBody` | Request payload body (Swagger 명세 이름과 일치) | `$requestBody` |
-| `$response` | Response에서 사용하는 값 | `$response` |
-
-> **참고**: 쿼리 파라미터와 request body는 특정 값을 명시하지 않고 객체 형태로 query key에 포함됩니다.
-
-**3. TanStack Query 옵션 설정**
-```yaml
-# 캐시 설정 최적화
-/chats/init-options:
-  get:
-    x-query-key: 'GET_CHATS_INIT_OPTIONS()'
-    x-stale-time: infinity          # 무한 캐시 유지
-    
-/chats/{chat_id}/options:
-  get:
-    x-query-key: 'GET_CHATS_CHATID_OPTIONS($paramters.chat_id)'
-    x-stale-time: infinity          # 무한 캐시 유지  
-    x-gc-time: infinity             # 가비지 컬렉션 방지
-```
-
-#### 자동 생성되는 코드
-
-**Mutation Hook (쿼리 무효화 포함)**
-```typescript
-/**
- * @tags chats
- * @summary Delete Chat
- * @request DELETE:/chats/{chat_id}
- */
-export const useDeleteChatsByChatIdMutation = (
-  options?: Omit<
-    UseMutationOptions<void, DefaultError, TChatsApiRequestParameters["deleteChatsByChatId"]>,
-    "mutationFn" | "mutationKey"
-  >,
-) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    ...mutations.deleteChatsByChatId(),
-    ...options,
-    onSuccess: (data, variables, context) => {
-              // x-invalidate-query-key 기반 자동 무효화
-        queryClient.invalidateQueries({ 
-          queryKey: CHATS_QUERY_KEY.GET_CHATS(),
-          exact: true,
-        });
-        queryClient.invalidateQueries({
-          queryKey: CHATS_QUERY_KEY.GET_CHATS_CHATID(variables.chatId),
-          exact: true,
-        });
-        queryClient.invalidateQueries({
-          queryKey: CHATS_QUERY_KEY.GET_CHATS_CHATID_MESSAGES(variables.chatId),
-          exact: true,
-        });
-        queryClient.invalidateQueries({
-          queryKey: CHATS_QUERY_KEY.GET_CHATS_CHATID_PROBLEMS(variables.chatId),
-          exact: true,
-        });
-
-      // 사용자 정의 onSuccess 콜백 실행
-      options?.onSuccess?.(data, variables, context);
-    },
-  });
-};
-```
-
-**Query Hook (캐시 옵션 포함)**
-```typescript
-/**
- * @tags chats
- * @summary Get Options
- * @request GET:/chats/{chat_id}/options
- */
-export const useGetChatsByChatIdOptionsQuery = <TData = ChatOptionsListResponseDto>(
-  requestArgs: TChatsApiRequestParameters['getChatsByChatIdOptions'],
-  options?: Omit<UseQueryOptions<ChatOptionsListResponseDto, DefaultError, TData>, 'queryKey' | 'queryFn'>,
-) => {
-  return useQuery({
-    ...queries.getChatsByChatIdOptions(requestArgs),
-    ...options,
-    staleTime:  Number.POSITIVE_INFINITY,    // x-stale-time: infinity
-    gcTime:  Number.POSITIVE_INFINITY,       // x-gc-time: infinity
-  });
-};
-```
-
-#### 실제 사용 예시
-
-```typescript
-// 채팅 삭제 시 관련된 모든 쿼리가 자동으로 무효화됨
-const deleteChatMutation = useDeleteChatsByChatIdMutation({
-  onSuccess: () => {
-    // 추가 로직 (선택사항)
-    toast.success('채팅이 삭제되었습니다');
-    router.push('/chats');
-  }
-});
-
-// 삭제 실행
-deleteChatMutation.mutate({
-  chatId: 123,
-});
-```
-
-**장점:**
-- 🤖 **자동화**: 수동으로 쿼리 무효화 코드 작성 불필요
-- 🎯 **정확성**: Swagger 정의와 100% 일치
-- 🔄 **일관성**: 모든 뮤테이션에서 동일한 패턴 적용
-- 🛡️ **안전성**: 사용자 정의 `onSuccess` 콜백과 충돌하지 않음
 
 ## 🔧 개발 가이드
 
