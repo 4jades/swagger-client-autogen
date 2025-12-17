@@ -19,7 +19,7 @@ yarn-error.log*
 *.pem
 
 # Debug playground output
-debug-playground/output/
+debug-playground/src/
 
 # JetBrains
 .idea/
