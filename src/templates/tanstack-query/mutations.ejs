@@ -46,6 +46,9 @@ const mutations = {
             return <%= moduleConfig.apiInstanceName %>.<%= routeConfig.request.functionName %>({<%= routeConfig.request.parameters.arguments.all.join(", ") %>});
         },
         mutationKey: <% ~moduleConfig.mutation.mutationKeyObjectName %>.<% ~mutation.mutationKeyConstanstName %>,
+        meta: {
+            mutationFnName: '<%~ routeConfig.request.functionName %>',
+        }
     }),
 <% } %>
 };
