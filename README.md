@@ -13,6 +13,7 @@
 - 📝 **TypeScript 완벽 지원** - 완전한 타입 안정성
 - ⚡ **Ky HTTP 클라이언트** - 현대적이고 가벼운 HTTP 클라이언트
 - 🔄 **TanStack Query 통합** - React Query hooks 자동 생성
+- 🎯 **전역 Mutation Effects** - 중앙화된 쿼리 무효화 관리
 - 🛡️ **Zod 스키마 생성** - 런타임 타입 검증 (선택사항)
 - 📁 **모듈러 구조** - 태그별 코드 분리
 
@@ -22,12 +23,13 @@
 2. [📖 사용법](#-사용법)
 3. [⚙️ 설정 옵션](#️-설정-옵션)
 4. [🎯 생성되는 코드](#-생성되는-코드)
-5. [🛠️ 고급 기능](#️-고급-기능)
-6. [🔧 개발 가이드](#-개발-가이드)
-7. [📝 예시](#-예시)
-8. [❓ FAQ](#-faq)
-9. [🐛 트러블슈팅](#-트러블슈팅)
-10. [📄 라이선스](#-라이선스)
+5. [🔄 전역 Mutation Effects](#-전역-mutation-effects)
+6. [🛠️ 고급 기능](#️-고급-기능)
+7. [🔧 개발 가이드](#-개발-가이드)
+8. [📝 예시](#-예시)
+9. [❓ FAQ](#-faq)
+10. [🐛 트러블슈팅](#-트러블슈팅)
+11. [📄 라이선스](#-라이선스)
 
 ## 🚀 Quick Start
 
@@ -487,6 +489,183 @@ export const usePostUsersMutation = <TContext = unknown>(
   });
 };
 ```
+
+## 🔄 전역 Mutation Effects
+
+`swagger-client-autogen`은 TanStack Query의 mutation 성공 시 전역적으로 쿼리를 무효화하거나 특정 로직을 실행할 수 있는 **Global Mutation Effect** 시스템을 제공합니다.
+
+### 주요 이점
+
+- 🎯 **중앙화된 부수 효과 관리**: 모든 mutation의 부수 효과를 한 곳에서 관리
+- 🔄 **자동 쿼리 무효화**: mutation 성공 시 관련 쿼리를 자동으로 무효화
+- 🛡️ **타입 안정성**: 완전한 TypeScript 타입 지원
+- 🎨 **선택적 적용**: 필요한 mutation만 선택적으로 전역 효과 적용
+
+### 자동 생성되는 타입 파일
+
+`generate` 명령어를 실행하면 `global-mutation-effect.type.ts` 파일이 자동으로 생성됩니다:
+
+```typescript
+// src/shared/api/global-mutation-effect.type.ts
+
+export type GlobalMutationEffectMap<M extends MutationMap> = Partial<{
+  [K in keyof M]: {
+    onSuccess: {
+      invalidate: (
+        data: ExtractMutationData<M, K>,
+        variables: ExtractMutationVariables<M, K>,
+        context: unknown,
+        mutation: Mutation<...>,
+      ) => void;
+    };
+  };
+}>;
+
+// 각 모듈별 타입
+export type TUsersGlobalMutationEffects = GlobalMutationEffectMap<typeof usersMutations>;
+export type TChatsGlobalMutationEffects = GlobalMutationEffectMap<typeof chatsMutations>;
+// ...
+
+// 통합 팩토리 타입
+export type TGlobalMutationEffectFactory = (
+  queryClient: QueryClient,
+) => Partial<
+  TUsersGlobalMutationEffects &
+  TChatsGlobalMutationEffects &
+  // ...
+>;
+```
+
+### 사용 예시
+
+**1. 전역 Mutation Effects 구현**
+
+```typescript
+// src/shared/api/global-mutation-effects.ts
+import type { QueryClient } from '@tanstack/react-query';
+import { queryClient } from '@/app/provider/tanstack-query';
+import { usersQueries } from '@/entities/users/api/queries';
+import type {
+  TUsersGlobalMutationEffects,
+  TGlobalMutationEffectFactory,
+} from './global-mutation-effect.type';
+
+export const globalMutationEffects: TGlobalMutationEffectFactory = (queryClient) => ({
+  ...userGlobalMutationEffects(queryClient),
+  // 다른 모듈의 effects도 여기에 추가
+});
+
+export const isGlobalMutationEffectKey = (
+  key: unknown
+): key is keyof ReturnType<typeof globalMutationEffects> => {
+  return typeof key === 'string' &&
+         Object.keys(globalMutationEffects(queryClient)).includes(key);
+};
+
+function userGlobalMutationEffects(
+  queryClient: QueryClient
+): TUsersGlobalMutationEffects {
+  return {
+    // mutation 함수명을 키로 사용
+    postUsers: {
+      onSuccess: {
+        invalidate: (_data, variables) => {
+          // 관련 쿼리 무효화
+          queryClient.invalidateQueries({
+            queryKey: usersQueries.getUsers({}).queryKey,
+            exact: true,
+          });
+        },
+      },
+    },
+  };
+}
+```
+
+**2. TanStack Query Provider 설정**
+
+```typescript
+// src/app/provider/tanstack-query.tsx
+import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { globalMutationEffects, isGlobalMutationEffectKey } from '@/shared/api/global-mutation-effects';
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 0,
+      retry: (failureCount, error) => {
+        return failureCount < 2;
+      },
+    },
+  },
+  mutationCache: new MutationCache({
+    onSuccess: async (_data, _variables, _context, mutation) => {
+      const disableGlobalInvalidation = mutation.options.meta?.disableGlobalInvalidation;
+      const mutationFnName = mutation.options.meta?.mutationFnName;
+
+      // 전역 무효화 비활성화 체크
+      if (disableGlobalInvalidation) {
+        return;
+      }
+
+      // 전역 mutation effect 실행
+      if (isGlobalMutationEffectKey(mutationFnName)) {
+        const invalidate = globalMutationEffects(queryClient)[mutationFnName]?.onSuccess.invalidate;
+
+        if (invalidate) {
+          invalidate(_data as never, _variables as never, _context as never, mutation as never);
+          return; // 전역 효과를 실행했으면 entity 단위 무효화는 하지 않음
+        }
+      }
+
+      // entity 단위 기본 무효화 (전역 효과가 없는 경우)
+      const mutationKey = mutation.options.mutationKey;
+      if (!mutationKey) return;
+
+      await queryClient.invalidateQueries({
+        queryKey: [mutationKey?.at(0)],
+        exact: false,
+      });
+    },
+  }),
+});
+
+export const TanstackQueryProvider = ({ children }: PropsWithChildren) => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+};
+```
+
+**3. 전역 무효화 비활성화 (선택적)**
+
+특정 mutation 호출 시 전역 무효화를 비활성화하려면:
+
+```typescript
+const mutation = usePostUsersMutation({
+  meta: {
+    disableGlobalInvalidation: true, // 전역 무효화 비활성화
+  },
+  onSuccess: (data) => {
+    // 커스텀 로직만 실행
+  },
+});
+```
+
+### 자세한 가이드
+
+전역 Mutation Effects 시스템에 대한 자세한 설명은 다음 문서를 참고하세요:
+
+📖 [전역 Mutation Effect 가이드](./.docs/global-mutation-effects.md)
+
+이 가이드에서는 다음 내용을 다룹니다:
+- 아키텍처 상세 설명
+- 작동 원리
+- 다양한 사용 패턴
+- 모범 사례
+- 트러블슈팅
 
 ## 🔧 개발 가이드
 
