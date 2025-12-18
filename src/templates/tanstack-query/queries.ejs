@@ -51,6 +51,7 @@ const queries = {
 
 export { queries as <%~ moduleName %>Queries };
 
+<% if (codegenConfig.createQueryHook !==false) { %>
 // ---------------------- Query ------------------------------
 <% for (const route of queryRoutes) {
     const routeDocs = includeFile("../route-docs.ejs", { config, route: route, utils });
@@ -97,5 +98,6 @@ export const <%~ query.suspenseQueryHookName %> = <TData=<%~ routeConfig.respons
     })
 }
 
-    <% } %>
+<% } %>
+<% } %>
 <% } %>

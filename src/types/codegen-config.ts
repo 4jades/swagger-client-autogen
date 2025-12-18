@@ -3,6 +3,7 @@ export type InputCodegenConfig = {
   username?: string;
   password?: string;
   createSchema: boolean;
+  createQueryHook?: boolean;
   customOutput?: {
     aliasInfo: {
       aliasMap: Record<string, string>;
