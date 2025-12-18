@@ -592,7 +592,6 @@ import { globalMutationEffects, isGlobalMutationEffectKey } from '@/shared/api/g
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0,
       retry: (failureCount, error) => {
         return failureCount < 2;
       },

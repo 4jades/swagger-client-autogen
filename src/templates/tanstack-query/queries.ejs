@@ -18,7 +18,7 @@ const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
 %>
 
 <% if (queryRoutes?.length) { %>
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery, useSuspenseQuery, queryOptions } from '@tanstack/react-query';
 import type { DefaultError, UseQueryOptions, UseSuspenseQueryOptions } from '@tanstack/react-query';
 import type { KyInstance, Options } from 'ky';
 
@@ -28,15 +28,21 @@ import type { KyInstance, Options } from 'ky';
 <%~ includeFile('../imports/api-instance.ejs', { ...it, moduleConfig, codegenConfig, resolveRelativeImportPath }) %>
 
 
-export const <% ~moduleConfig.query.queryKeyObjectName %> = {
+export const <%~ moduleConfig.query.queryKeyObjectName %> = {
 <% for (const {queryMeta, hookConfig: {query}} of queryRoutes) { %>
-<% ~query.queryKeyConstanstName %>: <% ~query.queryKeyConstanstFunction %>,
+<%~ query.queryKeyConstanstName %>: <% ~query.queryKeyConstanstFunction %>,
 <% } %>
 }
 
 const queries = {
-<% for (const {queryMeta, routeConfig, hookConfig: {query}} of queryRoutes) { %>
-<% ~routeConfig.request.functionName %>: ({ <%~ routeConfig.request.parameters.arguments.all.join(", ") %> }: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]) => ({
+<% for (const route of queryRoutes) { const {queryMeta, routeConfig, hookConfig: {query}}=route; const
+    routeDocs=includeFile("../route-docs.ejs", { config, route: route, utils }); 
+%>
+/**
+<%~ routeDocs.lines %>
+*
+*/
+<% ~routeConfig.request.functionName %>: ({ <%~ routeConfig.request.parameters.arguments.all.join(", ") %> }: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]) => queryOptions({
     queryKey: <%~ moduleConfig.query.queryKeyObjectName %>.<% ~query.queryKeyConstanstName %>(<% ~query.queryKeyArgs %>),
     queryFn: () => <% ~moduleConfig.apiInstanceName %>.<% ~routeConfig.request.functionName %>({<% ~routeConfig.request.parameters.arguments.all.join(", ") %>})
 }),
@@ -57,14 +63,13 @@ export { queries as <%~ moduleName %>Queries };
 *
 */
 export const <%~ query.queryHookName %> = <TData=<%~ routeConfig.response.dtoName %>>(
-    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]<%~ hasRequestArgs ? '' : ' = {}' %>,
-    options?: Omit<UseQueryOptions<<%~ routeConfig.response.dtoName %>,DefaultError, TData>,'queryKey' | 'queryFn' >
+    requestArgs: Parameters<typeof queries.<%~ routeConfig.request.functionName %>>[0]<%~ hasRequestArgs ? '' : ' = {}' %>,
+    options?: Omit<Parameters<typeof queryOptions<<%~ routeConfig.response.dtoName %>, Error, TData, ReturnType<typeof <%~ moduleConfig.query.queryKeyObjectName %>.<%~ query.queryKeyConstanstName %>>>>[0],'queryKey' | 'queryFn'>
 ) => {
     return useQuery({
         ...queries.<% ~routeConfig.request.functionName %>(requestArgs),
         ...options,
-        <%~ query.staleTime ? `staleTime: ${query.staleTime},` : '' %>
-        <%~ query.gcTime ? `gcTime: ${query.gcTime},` : '' %>
+        select: options?.select,
     })
 }
 
@@ -82,14 +87,13 @@ export const <%~ query.queryHookName %> = <TData=<%~ routeConfig.response.dtoNam
 *
 */
 export const <%~ query.suspenseQueryHookName %> = <TData=<%~ routeConfig.response.dtoName %>>(
-    requestArgs: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]<%~ hasRequestArgs ? '' : ' = {}' %>,
-    options?: Omit<UseQueryOptions<<%~ routeConfig.response.dtoName %>,DefaultError, TData>, 'queryKey' | 'queryFn' >
+    requestArgs: Parameters<typeof queries.<%~ routeConfig.request.functionName %>>[0]<%~ hasRequestArgs ? '' : ' = {}' %>,
+    options?: Omit<Parameters<typeof queryOptions<<%~ routeConfig.response.dtoName %>, Error, TData, ReturnType<typeof <%~ moduleConfig.query.queryKeyObjectName %>.<%~ query.queryKeyConstanstName %>>>>[0],'queryKey' | 'queryFn'>
 ) => {
     return useSuspenseQuery({
         ...queries.<% ~routeConfig.request.functionName %>(requestArgs),
         ...options,
-        <%~ query.staleTime ? `staleTime: ${query.staleTime},` : '' %>
-        <%~ query.gcTime ? `gcTime: ${query.gcTime},` : '' %>
+        select: options?.select,
     })
 }
 

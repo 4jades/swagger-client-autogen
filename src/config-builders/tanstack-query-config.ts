@@ -12,8 +12,6 @@ export type TanstackQueryConfig = {
     queryKeyConstanstFunction: string;
     queryHookName: string;
     suspenseQueryHookName: string;
-    staleTime: number | null | string;
-    gcTime: number | null | string;
   };
   mutation: {
     mutationKeyConstanstName: string;
@@ -33,8 +31,6 @@ export function generateTanstackQueryConfig(route: ParsedRoute, routeConfig: Rou
       queryKeyConstanstFunction: '',
       queryHookName: `use${pascalCaseRouteName}Query`,
       suspenseQueryHookName: `use${pascalCaseRouteName}SuspenseQuery`,
-      staleTime: null,
-      gcTime: null,
     },
     mutation: {
       mutationKeyConstanstName: buildKeyConstantsName(route.request) ?? '',
@@ -45,8 +41,6 @@ export function generateTanstackQueryConfig(route: ParsedRoute, routeConfig: Rou
 
   return pipe(
     configMutators.setQueryKeyConstantsFunction,
-    configMutators.setStaleTime,
-    configMutators.setGcTime,
     configMutators.setMutationKeyConstantsContent,
   )(initialTanstackQueryConfig);
 }
@@ -75,32 +69,6 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
 
       return produce(config, draft => {
         draft.query.queryKeyConstanstFunction = `(${routeConfig.request.parameters.signatures.required.join(', ')})=>${buildQueryKeyArray(route)}`;
-      });
-    },
-    setStaleTime: (config: TanstackQueryConfig) => {
-      const { raw } = route;
-
-      if (!('x-stale-time' in raw)) {
-        return config;
-      }
-
-      const xStaleTime = raw['x-stale-time'] === 'infinity' ? 'Number.POSITIVE_INFINITY' : Number(raw['x-stale-time']);
-
-      return produce(config, draft => {
-        draft.query.staleTime = xStaleTime;
-      });
-    },
-    setGcTime: (config: TanstackQueryConfig) => {
-      const { raw } = route;
-
-      if (!('x-gc-time' in raw)) {
-        return config;
-      }
-
-      const xGcTime = raw['x-gc-time'] === 'infinity' ? 'Number.POSITIVE_INFINITY' : Number(raw['x-gc-time']);
-
-      return produce(config, draft => {
-        draft.query.gcTime = xGcTime;
       });
     },
     setMutationKeyConstantsContent: (config: TanstackQueryConfig) => {

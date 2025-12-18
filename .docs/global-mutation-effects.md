@@ -113,7 +113,6 @@ import { globalMutationEffects, isGlobalMutationEffectKey } from '@/shared/api/g
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0,
       retry: (failureCount, error) => {
         // 에러 처리 로직
         return failureCount < 2;
