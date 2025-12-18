@@ -19,6 +19,8 @@ const resolveRelativeImportPath = moduleConfig.utils.resolveRelativeImportPath({
 import type { DefaultError, Mutation, QueryClient } from '@tanstack/react-query';
 <%~ includeFile('../imports/mutations-import.ejs', { routes, utils, codegenConfig, resolveRelativeImportPath }) %>
 
+// biome-ignore lint/suspicious/noExplicitAny: 타입 제약을 위해 any 사용
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyMutationFn = (variables: any) => any;
 
 type MutationFactory = () => {
