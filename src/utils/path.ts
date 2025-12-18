@@ -1,7 +1,7 @@
-import path from "node:path";
+import path from 'node:path';
 
 export const getAbsoluteFilePath = (filePath: string) => {
-	return path.resolve(process.cwd(), filePath);
+  return path.resolve(process.cwd(), filePath);
 };
 
 export const generateAlias = (outputPath: string, aliasMap: Record<string, string>): string => {

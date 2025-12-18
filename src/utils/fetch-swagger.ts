@@ -1,5 +1,6 @@
 import { log } from './log';
 
+// biome-ignore lint/suspicious/noExplicitAny: Swagger 스키마는 동적 타입이므로 any 사용
 export const fetchSwagger = async (url: string, username: string, password: string): Promise<any> => {
   const credentials = btoa(`${username}:${password}`);
 

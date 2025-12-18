@@ -1,18 +1,17 @@
-
-import path from "node:path";
-import { generateApi } from "swagger-typescript-api";
+import path from 'node:path';
+import { generateApi } from 'swagger-typescript-api';
 import { fetchSwagger } from './fetch-swagger';
 import { AnyOfSchemaParser } from './parser';
 import { isUrl } from './url';
 
 type GenerateApiCodeParams = Omit<
-	Parameters<typeof generateApi>[0],
-	"input" | "spec" | "moduleNameFirstTag" | "generateRouteTypes"
+  Parameters<typeof generateApi>[0],
+  'input' | 'spec' | 'moduleNameFirstTag' | 'generateRouteTypes'
 > & {
-	uri: string;
-	username: string;
-	password: string;
-	templates: string;
+  uri: string;
+  username: string;
+  password: string;
+  templates: string;
 };
 
 export const generateApiCode = async ({

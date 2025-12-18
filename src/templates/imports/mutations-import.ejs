@@ -1,0 +1,21 @@
+<%
+/**
+* @description 모든 모듈의 mutations를 import하는 템플릿입니다.
+*/
+
+const { routes, utils, codegenConfig, resolveRelativeImportPath } = it;
+
+const allRouteDependencies = routes.combined;
+const { pathInfo } = codegenConfig.customOutput;
+
+const mutationImportList = allRouteDependencies.map((moduleGroup) => {
+  const moduleName = utils.kebabCase(moduleGroup.moduleName);
+  const mutationsPath = pathInfo.mutations.output.relative.replace('{moduleName}', moduleName);
+  const mutationsAlias = resolveRelativeImportPath(mutationsPath);
+  const exportName = `${utils.internalCase(moduleName)}Mutations`;
+
+  return `import type { ${exportName} } from "${mutationsAlias}";`
+});
+%>
+
+<%~ mutationImportList.join("\n") %>
