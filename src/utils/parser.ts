@@ -40,22 +40,21 @@ class AnyOfSchemaParser extends MonoSchemaParser {
 
     if (this.schema.required === 'boolean') {
       !this.schema.required && ignoreTypes.push('null');
-    }else{
-      const isRequired = this.schemaComponentsMap._data.find(v=>v.typeName === this.schemaPath.at(0))?.rawTypeData?.required?.includes(this.schemaPath.at(1));
+    } else {
+      const isRequired = this.schemaComponentsMap._data
+        .find((v) => v.typeName === this.schemaPath.at(0))
+        ?.rawTypeData?.required?.includes(this.schemaPath.at(1));
       !isRequired && ignoreTypes.push('null');
     }
 
     const combined = this.schema.anyOf.map((childSchema) =>
-          this.schemaParserFabric.getInlineParseContent(
-              this.schemaUtils.makeAddRequiredToChildSchema(this.schema, childSchema),
-              this.schemaPath
-          )
+      this.schemaParserFabric.getInlineParseContent(
+        this.schemaUtils.makeAddRequiredToChildSchema(this.schema, childSchema),
+        this.schemaPath,
+      ),
     );
 
-    const filtered = this.schemaUtils.filterSchemaContents(
-      combined,
-      (content) => !ignoreTypes.includes(content)
-    );
+    const filtered = this.schemaUtils.filterSchemaContents(combined, (content) => !ignoreTypes.includes(content));
 
     return this.config.Ts.UnionType(filtered);
   }

@@ -24,7 +24,7 @@ if (!configPath) {
 }
 
 // Config 파일 로드
-const loadConfig = async configPath => {
+const loadConfig = async (configPath) => {
   try {
     const configModule = await import(path.resolve(process.cwd(), configPath));
     return configModule.config;
@@ -33,7 +33,6 @@ const loadConfig = async configPath => {
     process.exit(1);
   }
 };
-
 
 const config = await loadConfig(configPath);
 

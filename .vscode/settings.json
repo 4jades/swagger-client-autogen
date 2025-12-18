@@ -15,7 +15,7 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-  "editor.formatOnSave": false,
+  "editor.formatOnSave": true,
   "files.autoSave": "onFocusChange",
   "eslint.enable": false,
   "explorer.compactFolders": false,

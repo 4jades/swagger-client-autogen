@@ -33,16 +33,12 @@ type DeepTransformPaths<T> = {
   };
 };
 
-export type CodegenConfig = Omit<InputCodegenConfig, "customOutput"> & {
-		customOutput: {
-			pathInfo: Omit<
-				DeepTransformPaths<
-					Required<NonNullable<InputCodegenConfig["customOutput"]>["pathInfo"]>
-				>,
-				"streamHandlers"
-			>;
-			aliasInfo: NonNullable<
-				Required<NonNullable<InputCodegenConfig["customOutput"]>["aliasInfo"]>
-			>;
-		};
-	};
+export type CodegenConfig = Omit<InputCodegenConfig, 'customOutput'> & {
+  customOutput: {
+    pathInfo: Omit<
+      DeepTransformPaths<Required<NonNullable<InputCodegenConfig['customOutput']>['pathInfo']>>,
+      'streamHandlers'
+    >;
+    aliasInfo: NonNullable<Required<NonNullable<InputCodegenConfig['customOutput']>['aliasInfo']>>;
+  };
+};

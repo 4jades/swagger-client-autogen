@@ -1,8 +1,8 @@
+import { compact, pascalCase } from 'es-toolkit';
+import { produce } from 'immer';
 import type { RouteConfig } from '@/types/route-config';
 import type { ParsedRoute } from '@/types/swagger-typescript-api';
 import { buildKeyConstantsName } from '@/utils/tanstack-query-utils';
-import { compact, pascalCase } from 'es-toolkit';
-import { produce } from 'immer';
 import { pipe } from '../utils/fp';
 
 export type TanstackQueryConfig = {
@@ -57,31 +57,28 @@ function withRouteConfig(route: ParsedRoute, routeConfig: RouteConfig) {
 
         const pathSegments = path
           .split('/')
-          .filter(segment => segment && segment !== 'api')
-          .map(segment =>
-            segment.match(/\${/) ? segment.replace(/[${}]/g, '') : `'${segment}'`,
-          );
+          .filter((segment) => segment && segment !== 'api')
+          .map((segment) => (segment.match(/\${/) ? segment.replace(/[${}]/g, '') : `'${segment}'`));
         const queryParamsSegments = query ? 'params' : null;
         const payloadSegments = payload ? 'payload' : null;
 
         return `[${[...pathSegments, queryParamsSegments, payloadSegments].filter(Boolean).join(', ')}]`;
       };
 
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.query.queryKeyConstanstFunction = `(${routeConfig.request.parameters.signatures.required.join(', ')})=>${buildQueryKeyArray(route)}`;
       });
     },
     setMutationKeyConstantsContent: (config: TanstackQueryConfig) => {
       const buildMutationKeyConstanstContent = ({ request: { path = '' } }: ParsedRoute) => {
         return `[${compact(path.split('/'))
-          .map(segment => `'${segment.replace(/[${}]/g, '')}'`)
+          .map((segment) => `'${segment.replace(/[${}]/g, '')}'`)
           .join(', ')}]`;
       };
 
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.mutation.mutationKeyConstanstContent = buildMutationKeyConstanstContent(route);
       });
     },
   };
 }
-

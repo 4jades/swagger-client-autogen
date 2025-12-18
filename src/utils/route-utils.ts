@@ -1,19 +1,17 @@
-import { camelCase, compact } from "es-toolkit";
+import { camelCase, compact } from 'es-toolkit';
 import type { RawRouteInfo } from '../types/swagger-typescript-api';
 
 export const buildRequestFunctionName = (rotue: RawRouteInfo) => {
-	const { method, route } = rotue;
+  const { method, route } = rotue;
 
-	return camelCase(
-		compact([
-			method,
-			...route.split("/").map((segment) => {
-				return segment.includes("{")
-					? `By_${segment.replace(/[{}]/g, "")}`
-					: segment;
-			}),
-		]).join("_"),
-	);
+  return camelCase(
+    compact([
+      method,
+      ...route.split('/').map((segment) => {
+        return segment.includes('{') ? `By_${segment.replace(/[{}]/g, '')}` : segment;
+      }),
+    ]).join('_'),
+  );
 };
 
 export const isValidType = (type: string | null | undefined): boolean => {
@@ -23,13 +21,10 @@ export const isValidType = (type: string | null | undefined): boolean => {
   return !invalidPattern.test(type);
 };
 
-export const getDiscriminatorMatcher = (
-	discriminator: Record<string, string>,
-) => {
-	return Object.entries(discriminator.mapping)
-		.map(([key, value]) => {
-			return `with({ ${discriminator.propertyName}: "${key}" }, () => ${camelCase(value?.split("/")?.at(-1) ?? "")}DtoSchema)`;
-		})
-		.join(".");
+export const getDiscriminatorMatcher = (discriminator: Record<string, string>) => {
+  return Object.entries(discriminator.mapping)
+    .map(([key, value]) => {
+      return `with({ ${discriminator.propertyName}: "${key}" }, () => ${camelCase(value?.split('/')?.at(-1) ?? '')}DtoSchema)`;
+    })
+    .join('.');
 };
-

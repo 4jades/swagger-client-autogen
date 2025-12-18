@@ -55,7 +55,7 @@ export function resolveRelativeImportPath(aliasMap: Record<string, string>, maxD
       }
 
       // 깊이 제한 확인
-      const depth = relativePath.split('/').filter(s => s === '..').length;
+      const depth = relativePath.split('/').filter((s) => s === '..').length;
 
       // 깊이 제한을 초과하지 않는 경우 상대 경로 사용
       if (depth <= maxDepth) {

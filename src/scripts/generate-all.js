@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { kebabCase } from 'es-toolkit';
 import minimist from 'minimist';
 import { generate } from 'ts-to-zod';
 import { setupCodegenConfig } from '../config-builders/codegen-config.ts';
@@ -10,7 +11,6 @@ import { writeFileToPath } from '../utils/file.ts';
 import { log } from '../utils/log.ts';
 import { buildRequestFunctionName } from '../utils/route-utils.ts';
 import { generateApiCode } from '../utils/swagger-typescript-api.ts';
-import { kebabCase } from "es-toolkit";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,7 +28,7 @@ const parseArguments = () => {
   };
 };
 
-const loadConfig = async configPath => {
+const loadConfig = async (configPath) => {
   try {
     const configModule = await import(path.resolve(process.cwd(), configPath));
     return setupCodegenConfig(configModule.config);
@@ -45,7 +45,7 @@ const printUsage = () => {
   console.error('Default config file: swagger-client-autogen.config.ts');
 };
 
-const generateApiFunctionCode = async config => {
+const generateApiFunctionCode = async (config) => {
   const { projectTemplate, uri, username, password } = config;
   const templatePath = projectTemplate
     ? path.resolve(process.cwd(), projectTemplate)
@@ -79,7 +79,7 @@ const generateApiFunctionCode = async config => {
           usage: buildRequestFunctionName(rawRouteInfo),
         };
       },
-      onCreateRoute: route => {
+      onCreateRoute: (route) => {
         const routeConfig = generateConfig(route);
         const moduleConfig = generateModuleConfig(route, config);
 
@@ -93,7 +93,7 @@ const generateApiFunctionCode = async config => {
     },
   });
 
-  for (const {fileName, fileContent} of apiFunctionCode.files) {
+  for (const { fileName, fileContent } of apiFunctionCode.files) {
     if (fileName === 'http-client') continue;
 
     const { pathInfo } = config.customOutput;
@@ -114,7 +114,7 @@ const generateApiFunctionCode = async config => {
   }
 };
 
-const generateTanstackQueryCode = async config => {
+const generateTanstackQueryCode = async (config) => {
   const { projectTemplate, uri, username, password } = config;
   const templatePath = projectTemplate
     ? path.resolve(process.cwd(), projectTemplate, 'tanstack-query')
@@ -157,7 +157,7 @@ const generateTanstackQueryCode = async config => {
               return kebabCase(str);
             },
           },
-        }
+        };
       },
       onCreateRouteName: (routeNameInfo, rawRouteInfo) => {
         return {
@@ -165,12 +165,12 @@ const generateTanstackQueryCode = async config => {
           usage: buildRequestFunctionName(rawRouteInfo),
         };
       },
-      onCreateRoute: route => {
+      onCreateRoute: (route) => {
         const { moduleName } = route.raw;
         const routeConfig = generateConfig(route);
         const moduleConfig = generateModuleConfig(route, config);
         const tanstackQueryConfig = generateTanstackQueryConfig(route, routeConfig);
-        
+
         return {
           ...route,
           routeConfig,
@@ -216,7 +216,7 @@ const generateTanstackQueryCode = async config => {
   }
 };
 
-const generateSchemaCode = async config => {
+const generateSchemaCode = async (config) => {
   const { projectTemplate, uri, username, password } = config;
   const templatePath = projectTemplate
     ? path.resolve(process.cwd(), projectTemplate)
@@ -251,7 +251,7 @@ const generateSchemaCode = async config => {
     ],
     schemaParsers: {},
     hooks: {
-      onCreateRoute: route => {
+      onCreateRoute: (route) => {
         const routeConfig = generateConfig(route);
         const moduleConfig = generateModuleConfig(route, config);
 

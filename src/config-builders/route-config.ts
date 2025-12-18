@@ -11,8 +11,8 @@ export function generateConfig(route: ParsedRoute) {
     request: {
       functionName: route.routeName.usage,
       pathParams: {
-        signatures: new Array<string>(),
-        arguments: new Array<string>(),
+        signatures: [] as string[],
+        arguments: [] as string[],
       },
       query: {
         dtoName: '',
@@ -34,23 +34,23 @@ export function generateConfig(route: ParsedRoute) {
       },
       parameters: {
         signatures: {
-          required: new Array<string>(),
-          all: new Array<string>(),
+          required: [] as string[],
+          all: [] as string[],
         },
         arguments: {
-          required: new Array<string>(),
-          all: new Array<string>(),
+          required: [] as string[],
+          all: [] as string[],
         },
       },
       schema: {
-        list: new Array<string>(),
+        list: [] as string[],
         expression: null,
       },
     },
     response: {
       dtoName: '',
       schema: {
-        list: new Array<string>(),
+        list: [] as string[],
         expression: null,
       },
     },
@@ -77,16 +77,16 @@ export function generateConfig(route: ParsedRoute) {
 function withRoute(route: ParsedRoute) {
   return {
     setRequestFunctionName: (config: RouteConfig): RouteConfig => {
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.functionName = route.routeName.usage;
       });
     },
     setPathParamsSignatures: (config: RouteConfig): RouteConfig => {
       const { parameters } = route.request;
 
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.pathParams.signatures =
-          parameters?.map(parameter => {
+          parameters?.map((parameter) => {
             return compact([parameter.name, parameter.optional && '?', ':', parameter.type]).join('');
           }) ?? [];
       });
@@ -94,9 +94,9 @@ function withRoute(route: ParsedRoute) {
     setPathParamsArguments: (config: RouteConfig): RouteConfig => {
       const { parameters } = route.request;
 
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.pathParams.arguments =
-          parameters?.map(parameter => {
+          parameters?.map((parameter) => {
             return parameter.name as unknown as string;
           }) ?? [];
       });
@@ -104,7 +104,7 @@ function withRoute(route: ParsedRoute) {
     setQueryInfo: (config: RouteConfig): RouteConfig => {
       const { request, routeName } = route;
 
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.query.dtoName = request.query ? pascalCase(`${routeName.original}QueryParams`) : null;
         draft.request.query.schema.name = request.query ? `${routeName.original}QueryParamsSchema` : '';
       });
@@ -112,20 +112,20 @@ function withRoute(route: ParsedRoute) {
     setHeaderInfo: (config: RouteConfig): RouteConfig => {
       const { request, routeName } = route;
 
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.headers.dtoName = request.headers ? pascalCase(`${routeName.original}Headers`) : null;
         draft.request.headers.schema.name = request.headers ? `${routeName.original}HeadersSchema` : '';
       });
     },
     setPayloadDtoName: (config: RouteConfig): RouteConfig => {
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.payload.dtoName = route.specificArgs?.body?.type;
       });
     },
     setRequestFunctionOptionsTypeExpression: (config: RouteConfig): RouteConfig => {
       const { request } = route;
 
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.options.typeExpr = request.headers
           ? `Omit<Options, 'headers'> & { headers: ${config.request.headers.dtoName} }`
           : 'Options';
@@ -140,7 +140,7 @@ function withRoute(route: ParsedRoute) {
         route.request.payload &&
         compact(['payload', route.request.payload.optional && '?', ': ', config.request.payload.dtoName]).join('');
 
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.parameters.signatures.required = compact([
           ...config.request.pathParams.signatures,
           inlineQueryParamsParameter,
@@ -149,7 +149,7 @@ function withRoute(route: ParsedRoute) {
       });
     },
     setRequestAllSignatures: (config: RouteConfig): RouteConfig => {
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.parameters.signatures.all = compact([
           ...config.request.parameters.signatures.required,
           'kyInstance?: KyInstance',
@@ -161,7 +161,7 @@ function withRoute(route: ParsedRoute) {
       const inlineQueryParamsArgs = route.request.query && 'params';
       const inlinePayloadArgs = route.request.payload && 'payload';
 
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.parameters.arguments.required = compact([
           ...config.request.pathParams.arguments,
           inlineQueryParamsArgs,
@@ -170,7 +170,7 @@ function withRoute(route: ParsedRoute) {
       });
     },
     setRequestAllArguments: (config: RouteConfig): RouteConfig => {
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.parameters.arguments.all = compact([
           ...config.request.parameters.arguments.required,
           'kyInstance',
@@ -179,7 +179,7 @@ function withRoute(route: ParsedRoute) {
       });
     },
     setResponseDtoName: (config: RouteConfig): RouteConfig => {
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.response.dtoName = route.response.type ?? null;
       });
     },
@@ -199,10 +199,10 @@ function withRoute(route: ParsedRoute) {
           ? `match(payload).${getDiscriminatorMatcher(discriminator)}.otherwise(()=>null)`
           : nomalSchemaName;
 
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.request.schema.list = isDiscriminatedUnion
           ? Object.values(discriminator.mapping).map(
-              v => `${camelCase((v as string).split('/').at(-1) ?? '')}DtoSchema`,
+              (v) => `${camelCase((v as string).split('/').at(-1) ?? '')}DtoSchema`,
             )
           : [nomalSchemaName];
         draft.request.schema.expression = isValidType(config.request.payload.dtoName) ? schemaExpression : null;
@@ -213,12 +213,12 @@ function withRoute(route: ParsedRoute) {
       const nomalSchemaName = `${camelCase(config.response.dtoName ?? '')}Schema`;
 
       const isList = Boolean(
-        responseBodyInfo?.responses.find(v => v.isSuccess)?.content?.['application/json']?.schema?.type === 'array',
+        responseBodyInfo?.responses.find((v) => v.isSuccess)?.content?.['application/json']?.schema?.type === 'array',
       );
       const isDiscriminatedUnion = Boolean(
-        responseBodyInfo?.responses.find(v => v.isSuccess)?.content?.['application/json']?.schema?.discriminator,
+        responseBodyInfo?.responses.find((v) => v.isSuccess)?.content?.['application/json']?.schema?.discriminator,
       );
-      const discriminator = responseBodyInfo?.responses.find(v => v.isSuccess)?.content?.['application/json']?.schema
+      const discriminator = responseBodyInfo?.responses.find((v) => v.isSuccess)?.content?.['application/json']?.schema
         ?.discriminator;
 
       const schemaExpression = isList
@@ -227,10 +227,10 @@ function withRoute(route: ParsedRoute) {
           ? `match(response).${getDiscriminatorMatcher(discriminator)}.otherwise(()=>null)`
           : nomalSchemaName;
 
-      return produce(config, draft => {
+      return produce(config, (draft) => {
         draft.response.schema.list = isDiscriminatedUnion
           ? Object.values(discriminator.mapping).map(
-              v => `${camelCase((v as string).split('/').at(-1) ?? '')}DtoSchema`,
+              (v) => `${camelCase((v as string).split('/').at(-1) ?? '')}DtoSchema`,
             )
           : [nomalSchemaName];
         draft.response.schema.expression = isValidType(response.type) ? schemaExpression : null;

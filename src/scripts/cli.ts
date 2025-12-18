@@ -36,11 +36,11 @@ function runScript(scriptPath: string, args: string[]) {
     cwd: process.cwd(),
   });
 
-  child.on('close', code => {
+  child.on('close', (code) => {
     process.exit(code);
   });
 
-  child.on('error', error => {
+  child.on('error', (error) => {
     console.error(`실행 오류: ${error.message}`);
     process.exit(1);
   });

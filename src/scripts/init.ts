@@ -186,7 +186,7 @@ ${pc.yellow('개발 서버:')} http://localhost:3000/api-docs`,
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(error => {
+  main().catch((error) => {
     p.log.error(`초기화 중 오류가 발생했습니다: ${error}`);
     process.exit(1);
   });
