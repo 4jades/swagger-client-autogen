@@ -4,6 +4,7 @@
 */
 
 const { utils, route, modelTypes, config } = it;
+const { _ } = utils;
 
 const { moduleName, routes } = route;
 
@@ -36,7 +37,7 @@ export const <%~ moduleConfig.query.queryKeyObjectName %> = {
 
 const queries = {
 <% for (const route of queryRoutes) { const {queryMeta, routeConfig, hookConfig: {query}}=route; const
-    routeDocs=includeFile("../route-docs.ejs", { config, route: route, utils }); 
+    routeDocs=includeFile("../route-docs.ejs", { config, route: route, utils });
 %>
 /**
 <%~ routeDocs.lines %>
@@ -44,8 +45,22 @@ const queries = {
 */
 <% ~routeConfig.request.functionName %>: ({ <%~ routeConfig.request.parameters.arguments.all.join(", ") %> }: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]) => queryOptions({
     queryKey: <%~ moduleConfig.query.queryKeyObjectName %>.<% ~query.queryKeyConstanstName %>(<% ~query.queryKeyArgs %>),
-    queryFn: () => <% ~moduleConfig.apiInstanceName %>.<% ~routeConfig.request.functionName %>({<% ~routeConfig.request.parameters.arguments.all.join(", ") %>})
-}),
+    queryFn: () => <% ~moduleConfig.apiInstanceName %>.<% ~routeConfig.request.functionName %>({<% ~routeConfig.request.parameters.arguments.all.join(", ") %>})<%
+    const extraOptions = _.compact([
+        query.staleTime !== undefined
+            ? query.staleTimeComment
+                ? `staleTime: ${query.staleTime} // ${query.staleTimeComment}`
+                : `staleTime: ${query.staleTime}`
+            : null,
+        query.gcTime !== undefined
+            ? query.gcTimeComment
+                ? `gcTime: ${query.gcTime} // ${query.gcTimeComment}`
+                : `gcTime: ${query.gcTime}`
+            : null
+    ]);
+    if (extraOptions.length > 0) { %>,
+    <% ~extraOptions.join(',\n    ') %>
+<% } %>}),
 <% } %>
 }
 
