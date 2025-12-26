@@ -104,8 +104,8 @@ export function generateTanstackQueryConfig(route: ParsedRoute, routeConfig: Rou
     queryHookName: `use${pascalCaseRouteName}Query`,
     suspenseQueryHookName: `use${pascalCaseRouteName}SuspenseQuery`,
     extraOptionContent: compact([
-      `staleTime: ${parsedStaleTime?.expression} ${parsedStaleTime?.comment ? `, // ${parsedStaleTime?.comment}` : ''}`,
-      `gcTime: ${parsedGcTime?.expression} ${parsedGcTime?.comment ? `, // ${parsedGcTime?.comment}` : ''}`,
+      parsedStaleTime?.expression ? `staleTime: ${parsedStaleTime?.expression} ${parsedStaleTime?.comment ? `, // ${parsedStaleTime?.comment}` : ''}` : '',
+      parsedGcTime?.expression ? `gcTime: ${parsedGcTime?.expression} ${parsedGcTime?.comment ? `, // ${parsedGcTime?.comment}` : ''}` : '',
     ]).join(',\n') + '\n',
   };
 
