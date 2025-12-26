@@ -53,8 +53,8 @@ export function generateTanstackQueryConfig(route: ParsedRoute, routeConfig: Rou
       return undefined;
     }
 
-    // Infinity는 특별 처리
-    if (value === 'Infinity') {
+    // Infinity는 특별 처리 (대소문자 구분 없음)
+    if (value.toLowerCase() === 'infinity') {
       return { expression: 'Infinity' };
     }
 

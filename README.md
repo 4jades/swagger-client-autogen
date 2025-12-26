@@ -309,7 +309,7 @@ paths:
 
   /static-data:
     get:
-      x-staleTime: 'static'  # 절대 stale로 간주되지 않음
+      x-staleTime: 'static'  # 절대 stale로 간주되지 않음 (함수로 사용 시 항상 0 반환)
       summary: Get Static Data
       # ...
 ```
@@ -317,8 +317,8 @@ paths:
 **지원 형식:**
 - `숫자`: 밀리초 단위 (예: `300000`)
 - `시간 단위`: `'5h'`, `'30m'`, `'45s'`, `'1h30m45s'`
-- `'Infinity'`: 무한대
-- `'static'`: 절대 stale로 간주되지 않음
+- `'Infinity'`: 무한대 (수동 무효화 전까지 fresh 유지)
+- `'static'`: 절대 stale로 간주되지 않음 (함수로 사용 시 항상 0 반환)
 
 생성되는 코드:
 ```typescript

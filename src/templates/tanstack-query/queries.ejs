@@ -48,18 +48,19 @@ const queries = {
     queryFn: () => <% ~moduleConfig.apiInstanceName %>.<% ~routeConfig.request.functionName %>({<% ~routeConfig.request.parameters.arguments.all.join(", ") %>})<%
     const extraOptions = _.compact([
         query.staleTime !== undefined
-            ? query.staleTimeComment
-                ? `staleTime: ${query.staleTime} // ${query.staleTimeComment}`
-                : `staleTime: ${query.staleTime}`
+            ? { value: `staleTime: ${query.staleTime}`, comment: query.staleTimeComment }
             : null,
         query.gcTime !== undefined
-            ? query.gcTimeComment
-                ? `gcTime: ${query.gcTime} // ${query.gcTimeComment}`
-                : `gcTime: ${query.gcTime}`
+            ? { value: `gcTime: ${query.gcTime}`, comment: query.gcTimeComment }
             : null
     ]);
     if (extraOptions.length > 0) { %>,
-    <% ~extraOptions.join(',\n    ') %>
+    <%~ extraOptions.map((opt, idx) => {
+        const isLast = idx === extraOptions.length - 1;
+        return opt.comment
+            ? `${opt.value}${isLast ? '' : ','} // ${opt.comment}`
+            : `${opt.value}${isLast ? '' : ','}`;
+    }).join('\n    ') %>
 <% } %>}),
 <% } %>
 }
