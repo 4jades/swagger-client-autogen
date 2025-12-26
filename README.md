@@ -264,6 +264,126 @@ export default config;
 - `aliasMap`을 기반으로 alias 자동 계산
 - 더 간결하고 DRY한 설정 구조
 
+### Swagger x- 프로퍼티 (커스텀 확장)
+
+Swagger 스펙에 x- 프로퍼티를 추가하여 코드 생성을 세밀하게 제어할 수 있습니다.
+
+#### `x-ignore` - 엔드포인트 무시
+
+특정 엔드포인트의 코드 생성을 건너뛸 수 있습니다.
+
+```yaml
+paths:
+  /health:
+    x-ignore: true  # 이 경로의 모든 메서드 무시
+    get:
+      summary: Health Check
+      # ... (코드 생성되지 않음)
+
+  /users:
+    get:
+      x-ignore: true  # GET /users만 무시
+      # ...
+    post:
+      # POST /users는 정상적으로 생성됨
+      # ...
+```
+
+#### `x-staleTime` - TanStack Query staleTime 설정
+
+Query의 staleTime을 엔드포인트별로 설정할 수 있습니다.
+
+```yaml
+paths:
+  /users:
+    get:
+      x-staleTime: '5m'  # 5분
+      summary: Get Users
+      # ...
+
+  /config:
+    get:
+      x-staleTime: 'Infinity'  # 무한대 (수동 무효화 전까지 fresh 유지)
+      summary: Get Config
+      # ...
+
+  /static-data:
+    get:
+      x-staleTime: 'static'  # 절대 stale로 간주되지 않음
+      summary: Get Static Data
+      # ...
+```
+
+**지원 형식:**
+- `숫자`: 밀리초 단위 (예: `300000`)
+- `시간 단위`: `'5h'`, `'30m'`, `'45s'`, `'1h30m45s'`
+- `'Infinity'`: 무한대
+- `'static'`: 절대 stale로 간주되지 않음
+
+생성되는 코드:
+```typescript
+const queries = {
+  getUsers: ({ kyInstance, options }) => queryOptions({
+    queryKey: USERS_QUERY_KEY.GET_USERS(),
+    queryFn: () => usersApi.getUsers({ kyInstance, options }),
+    staleTime: 5 * 60 * 1000 // 5분
+  }),
+};
+```
+
+#### `x-gcTime` - TanStack Query gcTime 설정
+
+Query의 gcTime (가비지 컬렉션 시간)을 엔드포인트별로 설정할 수 있습니다.
+
+```yaml
+paths:
+  /users:
+    get:
+      x-gcTime: '10m'  # 10분
+      summary: Get Users
+      # ...
+
+  /permanent-cache:
+    get:
+      x-gcTime: 'Infinity'  # 가비지 컬렉션 비활성화
+      summary: Get Permanent Data
+      # ...
+```
+
+**지원 형식:**
+- `숫자`: 밀리초 단위
+- `시간 단위`: `'5h'`, `'30m'`, `'45s'`, `'1h30m45s'`
+- `'Infinity'`: 가비지 컬렉션 비활성화
+
+생성되는 코드:
+```typescript
+const queries = {
+  getUsers: ({ kyInstance, options }) => queryOptions({
+    queryKey: USERS_QUERY_KEY.GET_USERS(),
+    queryFn: () => usersApi.getUsers({ kyInstance, options }),
+    gcTime: 10 * 60 * 1000 // 10분
+  }),
+};
+```
+
+#### x- 프로퍼티 병합
+
+`fetch` 명령어를 실행할 때 기존 파일의 x- 프로퍼티가 자동으로 유지됩니다.
+
+```bash
+npx swagger-client-autogen fetch --config swagger/config.ts
+```
+
+```
+유지된 x- 프로퍼티:
+┌─────────┬──────────────┬──────────┬─────────────────────────────┐
+│ (index) │ 엔드포인트   │ 메서드   │ x- 프로퍼티                 │
+├─────────┼──────────────┼──────────┼─────────────────────────────┤
+│    0    │ '/health'    │ '-'      │ 'x-ignore'                  │
+│    1    │ '/users'     │ 'GET'    │ 'x-staleTime, x-gcTime'     │
+└─────────┴──────────────┴──────────┴─────────────────────────────┘
+```
+
 ## 🎯 생성되는 코드
 
 ### API 클라이언트 클래스
