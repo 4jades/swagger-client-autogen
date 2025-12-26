@@ -45,6 +45,10 @@ const printUsage = () => {
   console.error('Default config file: swagger-client-autogen.config.ts');
 };
 
+const ignoreRoute = (route) => {
+  return route.raw['x-ignore'] === true;
+};
+
 const generateApiFunctionCode = async (config) => {
   const { projectTemplate, uri, username, password } = config;
   const templatePath = projectTemplate
@@ -80,6 +84,10 @@ const generateApiFunctionCode = async (config) => {
         };
       },
       onCreateRoute: (route) => {
+        if (ignoreRoute(route)) {
+          return false;
+        }
+
         const routeConfig = generateConfig(route);
         const moduleConfig = generateModuleConfig(route, config);
 
@@ -166,6 +174,10 @@ const generateTanstackQueryCode = async (config) => {
         };
       },
       onCreateRoute: (route) => {
+        if (ignoreRoute(route)) {
+          return false;
+        }
+
         const { moduleName } = route.raw;
         const routeConfig = generateConfig(route);
         const moduleConfig = generateModuleConfig(route, config);
@@ -252,6 +264,10 @@ const generateSchemaCode = async (config) => {
     schemaParsers: {},
     hooks: {
       onCreateRoute: (route) => {
+        if (ignoreRoute(route)) {
+          return false;
+        }
+
         const routeConfig = generateConfig(route);
         const moduleConfig = generateModuleConfig(route, config);
 

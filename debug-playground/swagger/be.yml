@@ -7,6 +7,7 @@ paths:
   # 1. 영화 조회 (기본 CRUD)
   /movies:
     get:
+      x-ignore: true
       tags:
         - movies
       summary: Get Movies
@@ -40,7 +41,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CursorPaginateResponse_MovieResponse_'
-      x-query-key: GET_MOVIES($parameters.$query)
 
   /movies/{movie_id}:
     get:
@@ -62,7 +62,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MovieDetailResponse'
-      x-query-key: GET_MOVIE_DETAIL($parameters.movie_id)
 
   # 2. SSE 스트리밍 테스트 (영화 대본 실시간 전송)
   /movies/{movie_id}/script-stream:
@@ -95,6 +94,7 @@ paths:
   # 3. 하이픈이 포함된 URL 테스트 (리뷰 및 평점)
   /movie-reviews:
     get:
+      x-ignore: true
       tags:
         - movie-reviews
       summary: Get Reviews
@@ -120,7 +120,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReviewListResponse'
-      x-query-key: GET_MOVIE_REVIEWS($parameters.movie_id)
 
     post:
       tags:
@@ -141,8 +140,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReviewResponse'
-      x-invalidate-query-key:
-        - GET_MOVIE_REVIEWS($requestBody.movie_id)
 
   /movie-reviews/{review-id}:
     delete:
@@ -176,8 +173,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BookmarkListResponse'
-      x-query-key: GET_MY_BOOKMARKS()
-
     post:
       tags:
         - bookmarks
@@ -197,8 +192,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BookmarkResponse'
-      x-invalidate-query-key:
-        - GET_MY_BOOKMARKS()
 
 components:
   schemas:

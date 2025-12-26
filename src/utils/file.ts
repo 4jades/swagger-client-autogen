@@ -12,3 +12,11 @@ export const writeFileToPath = async (filePath: string, fileContent: string): Pr
     log.error(`Failed to write file at ${filePath}: ${err}`);
   }
 };
+
+export const readFileIfExists = async (filePath: string): Promise<string | null> => {
+  try {
+    return await fs.promises.readFile(filePath, 'utf-8');
+  } catch (err) {
+    return null;
+  }
+};
