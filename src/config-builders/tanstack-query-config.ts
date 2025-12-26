@@ -12,10 +12,7 @@ export type TanstackQueryConfig = {
     queryKeyConstanstFunction: string;
     queryHookName: string;
     suspenseQueryHookName: string;
-    staleTime?: number | string;
-    staleTimeComment?: string;
-    gcTime?: number | string;
-    gcTimeComment?: string;
+    extraOptionContent: string;
   };
   mutation: {
     mutationKeyConstanstName: string;
@@ -96,30 +93,22 @@ export function generateTanstackQueryConfig(route: ParsedRoute, routeConfig: Rou
     };
   };
 
+  // staleTime과 gcTime 파싱 및 추가
+  const parsedStaleTime = parseTimeValue(xStaleTime);
+  const parsedGcTime = parseTimeValue(xGcTime);
+
   const queryOptions: TanstackQueryConfig['query'] = {
     queryKeyArgs: routeConfig.request.parameters.arguments.required.join(', '),
     queryKeyConstanstName: buildKeyConstantsName(route.request) ?? '',
     queryKeyConstanstFunction: '',
     queryHookName: `use${pascalCaseRouteName}Query`,
     suspenseQueryHookName: `use${pascalCaseRouteName}SuspenseQuery`,
+    extraOptionContent: compact([
+      `staleTime: ${parsedStaleTime?.expression} ${parsedStaleTime?.comment ? `, // ${parsedStaleTime?.comment}` : ''}`,
+      `gcTime: ${parsedGcTime?.expression} ${parsedGcTime?.comment ? `, // ${parsedGcTime?.comment}` : ''}`,
+    ]).join(',\n') + '\n',
   };
 
-  // staleTime과 gcTime 파싱 및 추가
-  const parsedStaleTime = parseTimeValue(xStaleTime);
-  const parsedGcTime = parseTimeValue(xGcTime);
-
-  if (parsedStaleTime) {
-    queryOptions.staleTime = parsedStaleTime.expression;
-    if (parsedStaleTime.comment) {
-      queryOptions.staleTimeComment = parsedStaleTime.comment;
-    }
-  }
-  if (parsedGcTime) {
-    queryOptions.gcTime = parsedGcTime.expression;
-    if (parsedGcTime.comment) {
-      queryOptions.gcTimeComment = parsedGcTime.comment;
-    }
-  }
 
   const initialTanstackQueryConfig: TanstackQueryConfig = {
     query: queryOptions,

@@ -45,23 +45,9 @@ const queries = {
 */
 <% ~routeConfig.request.functionName %>: ({ <%~ routeConfig.request.parameters.arguments.all.join(", ") %> }: <% ~moduleConfig.apiParametersTypeName %>["<%~ routeConfig.request.functionName %>"]) => queryOptions({
     queryKey: <%~ moduleConfig.query.queryKeyObjectName %>.<% ~query.queryKeyConstanstName %>(<% ~query.queryKeyArgs %>),
-    queryFn: () => <% ~moduleConfig.apiInstanceName %>.<% ~routeConfig.request.functionName %>({<% ~routeConfig.request.parameters.arguments.all.join(", ") %>})<%
-    const extraOptions = _.compact([
-        query.staleTime !== undefined
-            ? { value: `staleTime: ${query.staleTime}`, comment: query.staleTimeComment }
-            : null,
-        query.gcTime !== undefined
-            ? { value: `gcTime: ${query.gcTime}`, comment: query.gcTimeComment }
-            : null
-    ]);
-    if (extraOptions.length > 0) { %>,
-    <%~ extraOptions.map((opt, idx) => {
-        const isLast = idx === extraOptions.length - 1;
-        return opt.comment
-            ? `${opt.value}${isLast ? '' : ','} // ${opt.comment}`
-            : `${opt.value}${isLast ? '' : ','}`;
-    }).join('\n    ') %>
-<% } %>}),
+    queryFn: () => <% ~moduleConfig.apiInstanceName %>.<% ~routeConfig.request.functionName %>({<% ~routeConfig.request.parameters.arguments.all.join(", ") %>}),
+    <%~ query.extraOptionContent %>
+}),
 <% } %>
 }
 

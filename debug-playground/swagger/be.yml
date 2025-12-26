@@ -44,6 +44,7 @@ paths:
 
   /movies/{movie_id}:
     get:
+      x-staleTime: 5m
       tags:
         - movies
       summary: Get Movie Detail
